@@ -2,7 +2,7 @@ import { check, errorEmoji } from 'utils/errors';
 
 import { ROLES } from '../constants';
 import { phaseController } from 'controllers/phase';
-
+import { structRoad } from 'structures/road';
 export abstract class RoleBase {
   private roleName: ROLES;
 
@@ -37,7 +37,7 @@ export abstract class RoleBase {
     creep: Creep,
     target: RoomPosition | StructureStorage | StructureContainer | Source,
     color: string,
-    disableRoadCheck = true
+    disableRoadCheck?: boolean
   ): number | undefined {
     const opts: MoveToOpts = {};
 
@@ -61,9 +61,9 @@ export abstract class RoleBase {
       if (code === OK && creep.memory.blocked && --creep.memory.blocked >= 0) {
         delete creep.memory.blocked;
       }
-      // if (!disableRoadCheck) {
-      //   Roads.shouldBuildAt(creep);
-      // }
+      if (!disableRoadCheck) {
+        // structRoad.shouldBuildAt(creep);
+      }
       return OK;
     } else if (code === ERR_NO_BODYPART) {
       // unable to move?
@@ -232,5 +232,41 @@ export abstract class RoleBase {
     return bodyParts.reduce((acc, part) => {
       return acc + BODYPART_COST[part];
     }, 0);
+  }
+
+  public build(creep: Creep): boolean | undefined {
+    const targetId = creep.memory.cId;
+    let target: Structure | ConstructionSite | null = null;
+
+    if (targetId) {
+      target = Game.getObjectById(targetId) as Structure | ConstructionSite;
+      if (!target) {
+        // the thing we were building is done. Find something else to do on this tick.
+        delete creep.memory.cId;
+      }
+    }
+    if (!target) {
+      target = creep.pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES) as ConstructionSite;
+    }
+
+    if (target) {
+      creep.memory.cId = target.id;
+
+      const code = creep.build(target as ConstructionSite);
+      this.emote(creep, '🚧 build', code);
+      if (code === OK) {
+        creep.busy = 1;
+      } else if (code === ERR_NOT_IN_RANGE) {
+        this.travelTo(creep, target.pos, '#ffe56d');
+      } else if (code === ERR_INVALID_TARGET) {
+        delete creep.memory.cId;
+      } else if (code === ERR_NO_BODYPART) {
+        // unable to build?
+        this.suicide(creep);
+      }
+    } else if (targetId) {
+      delete creep.memory.cId;
+    }
+    return true;
   }
 }

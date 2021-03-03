@@ -32,7 +32,7 @@ errorEmoji[-13] = 'ERR_NOT_ENOUGH_EXTENSIONS';
 errorEmoji[-14] = 'ERR_RCL_NOT_ENOUGH';
 errorEmoji[-15] = 'ERR_GCL_NOT_ENOUGH';
 
-export const check = (obj: Creep | StructureSpawn, action: string, code: number): boolean => {
+export const check = (obj: Creep | StructureSpawn | RoomPosition, action: string, code: number): boolean => {
   if (code !== OK) {
     const errMsg = errorCode[code] || 'UNKNOWN';
     if (obj instanceof Creep) {
@@ -41,6 +41,7 @@ export const check = (obj: Creep | StructureSpawn, action: string, code: number)
       obj.say(msg);
     }
     if (code !== ERR_TIRED) {
+      // @ts-ignore
       const pos = obj.pos || '';
       // @ts-ignore
       console.log(`${obj} ${pos} could not perform ${action}: ${errMsg}`);

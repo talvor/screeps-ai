@@ -3,18 +3,23 @@
 // memory extensions
 interface CreepMemory {
   _say?: string;
-  full: boolean;
+  full?: boolean;
   sId?: string;
   fallenResourceId?: string;
   rechargeId?: string;
+  cId?: string;
+  repairId?: string;
   blocked?: number;
-  origin: string;
+  origin?: string;
 }
 
 interface Memory {
   uuid: number;
   log: any;
   gcl: number;
+  roads: Record<string, number[]>;
+  con: Record<string, IBuildOrder[]>;
+  buildOrderCount: number;
 }
 
 interface RoomMemory {
@@ -46,6 +51,17 @@ declare namespace NodeJS {
   interface Global {
     log: any;
   }
+}
+
+interface IBuildOrder {
+  type: BuildableStructureConstant;
+  pos: string | RoomPosition;
+  queue?: number;
+}
+
+interface BuildOrder {
+  type: BuildableStructureConstant;
+  pos: RoomPosition;
 }
 
 interface IRole {

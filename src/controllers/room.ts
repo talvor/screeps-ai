@@ -1,6 +1,15 @@
 import { EXITS } from '../constants';
 
+const _lowHealthStructs: { [key: string]: AnyStructure[] } = {};
+
 export class RoomController {
+  public preRun(): void {
+    if (!Memory.rooms) Memory.rooms = {};
+    for (const roomName in Game.rooms) {
+      this.initialize(roomName);
+    }
+  }
+
   public initialize(roomName: string): void {
     if (!Memory.rooms[roomName].setup) {
       console.log(`Initializing ${roomName}`);
@@ -32,6 +41,42 @@ export class RoomController {
     data.phase = 1;
     data.lastChecked = Game.time;
     return data;
+  }
+
+  public healthRatio(hits: number | undefined, hitsMax: number | undefined): number {
+    if (!hits || !hitsMax) return 1;
+    const res = hits / hitsMax;
+    return res;
+  }
+
+  public findLowHealthStructures(
+    room: Room | RoomPosition | string,
+    structureThreshold: number,
+    roadThreshold = 0.2
+  ): AnyStructure | undefined {
+    // accept Room Object, RoomPosition Object, String
+    const roomName = (room as Room).name || (room as RoomPosition).roomName || (room as string);
+    room = Game.rooms[roomName];
+
+    if (!_lowHealthStructs[roomName]) {
+      _lowHealthStructs[roomName] = room.find<AnyStructure>(FIND_STRUCTURES, {
+        filter: (s: AnyStructure | StructureWall | StructureRampart) => {
+          if (!s.hits || !s.hitsMax) return false;
+          if (s.structureType === STRUCTURE_WALL || s.structureType === STRUCTURE_RAMPART) return false;
+
+          const healthRatio = this.healthRatio(s.hits, s.hitsMax);
+          const threshold = s.structureType === STRUCTURE_ROAD ? roadThreshold : structureThreshold;
+
+          return healthRatio < threshold;
+        }
+      });
+    }
+
+    if (!_lowHealthStructs[roomName] || _lowHealthStructs[roomName].length === 0) return;
+    _lowHealthStructs[roomName].sort(
+      (a, b) => this.healthRatio(a.hits, b.hitsMax) - this.healthRatio(b.hits, b.hitsMax)
+    );
+    return _lowHealthStructs[roomName].pop();
   }
 }
 

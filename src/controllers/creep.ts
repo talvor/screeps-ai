@@ -1,3 +1,4 @@
+import { roleBuilder } from 'roles/builder';
 import { roleHarvester } from 'roles/harvester';
 import { roleUpgrader } from 'roles/upgrader';
 
@@ -12,7 +13,7 @@ class CreepController {
     }
 
     roleHarvester.run(creep);
-    // roleBuilder.run(creep);
+    roleBuilder.run(creep);
     roleUpgrader.run(creep);
   }
 

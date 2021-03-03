@@ -1,8 +1,10 @@
 import { AVOID_LIST } from 'utils/Avoid';
 import { StructBase } from './base';
 import { phaseController } from 'controllers/phase';
+import { roleBuilder } from 'roles/builder';
 import { roleHarvester } from 'roles/harvester';
 import { roleUpgrader } from 'roles/upgrader';
+import { structRoad } from './road';
 
 export class StructSpawner extends StructBase {
   public constructor() {
@@ -35,19 +37,20 @@ export class StructSpawner extends StructBase {
 
       // create a creep immediately
       roleHarvester.spawn(spawner);
+
+      // Create network of roads to common places
+      console.log('Create Network of Roads');
+      const sources = spawner.room.find(FIND_SOURCES);
+      structRoad.connect(spawner, sources);
+      if (spawner.room.controller) structRoad.connect(spawner.room.controller, sources);
     }
     if (spawner.memory.level !== spawner.room.controller?.level) {
       // We can build things!
       spawner.memory.level = spawner.room.controller?.level;
 
-      // if (spawner.memory.setup < 2) {
-      //   // Create network of roads to common places
-      //   console.log('Create Network of Roads');
-      //   const sources = spawner.room.find(FIND_SOURCES);
-      //   structRoad.connect(spawner, sources);
-      //   if (spawner.room.controller) structRoad.connect(spawner.room.controller, sources);
-      //   spawner.memory.setup = 2;
-      // }
+      if (spawner.memory.setup < 2) {
+        spawner.memory.setup = 2;
+      }
     }
 
     // Do not have all spawners run on the same tick.
@@ -58,8 +61,8 @@ export class StructSpawner extends StructBase {
         roleHarvester.spawn(spawner);
         // } else if (roleMiner.shouldSpawn(spawner)) {
         //   roleMiner.spawn(spawner);
-        // } else if (roleBuilder.shouldSpawn(spawner)) {
-        //   roleBuilder.spawn(spawner);
+      } else if (roleBuilder.shouldSpawn(spawner)) {
+        roleBuilder.spawn(spawner);
       } else if (roleUpgrader.shouldSpawn(spawner)) {
         roleUpgrader.spawn(spawner);
         // } else if (roleRemoteBuilder.shouldSpawn(spawner)) {

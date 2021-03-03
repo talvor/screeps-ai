@@ -1,6 +1,8 @@
+import { buildController } from './build';
 import { creepController } from './creep';
 import { phaseController } from './phase';
 import { roomController } from './room';
+import { structRoad } from 'structures/road';
 import { structSpawner } from 'structures/spawner';
 
 export class GameController {
@@ -25,10 +27,8 @@ export class GameController {
       }
     }
 
-    if (!Memory.rooms) Memory.rooms = {};
-    for (const roomName in Game.rooms) {
-      roomController.initialize(roomName);
-    }
+    buildController.preRun();
+    roomController.preRun();
   }
 
   public run(): void {
@@ -66,8 +66,9 @@ export class GameController {
         // StructStorage.buildInRoom(room);
         // StructContainers.buildInRoom(room);
         // structSpawner.buildInRoom(room);
+
         // release new work for the builders if possible
-        // buildController.execute(room);
+        buildController.execute(room);
       }
 
       // Claimed a new room, build a spawner
@@ -90,6 +91,8 @@ export class GameController {
         delete Memory.creeps[name];
       }
     }
+
+    structRoad.gc();
   }
 }
 
