@@ -1,20 +1,66 @@
 // example declaration file - remove these and add your own custom typings
 
-// memory extension samples
+// memory extensions
 interface CreepMemory {
-  role: string;
-  room: string;
-  working: boolean;
+  _say?: string;
+  full: boolean;
+  sId?: string;
+  fallenResourceId?: string;
+  rechargeId?: string;
+  blocked?: number;
+  origin: string;
 }
 
 interface Memory {
   uuid: number;
   log: any;
+  gcl: number;
 }
 
-// `global` extension samples
+interface RoomMemory {
+  setup: number;
+  phase: number;
+  roomName: string;
+  exits: {
+    [key: string]: boolean | string;
+  };
+  sMiners: {
+    [key: string]: number;
+  };
+  lastChecked: number;
+  storageId?: string;
+}
+
+interface SpawnMemory {
+  setup: number;
+  level?: number;
+}
+
+// Object extensions
+interface Creep {
+  busy: number;
+}
+
+// `global` extension
 declare namespace NodeJS {
   interface Global {
     log: any;
   }
+}
+
+interface IRole {
+  count: number;
+  parts: BodyPartConstant[];
+  minimumEnergyToSpawn?: number;
+  shardwide?: boolean;
+}
+
+// Interfaces
+interface IStructureOpts {
+  howmanyAtEachPoi?: number;
+  minFreeAdjSpaces?: number;
+  minPlacementDistance?: number;
+  avoidList?: any[];
+  avoidIsCheckered?: boolean;
+  structureFilter?: FilterFunction<FindConstant> | FilterObject;
 }
