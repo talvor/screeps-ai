@@ -59,8 +59,7 @@ export class GameController {
         }
       }
 
-      // if (hasSpawner && Game.time % 100 === 3) {
-      if (hasSpawner && Game.time % 10 === 3) {
+      if (hasSpawner && Game.time % 100 === 3) {
         console.log('Attempting to build');
         // console.log('build orders: ' + Memory.con[room.name].length + ' ' + JSON.stringify(Memory.con[room.name].map(x => x.type)));
         // RoomDefense.buildInRoom(room);
