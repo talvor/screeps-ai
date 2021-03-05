@@ -27,10 +27,13 @@ export class RoleBuilder extends RoleBase {
         this.build(creep);
       }
     }
-    if (!creep.memory.full || !creep.busy) {
-      roleHarvester.harvest(creep);
+    if (!creep.busy) {
+      if (!creep.memory.full) {
+        roleHarvester.harvest(creep);
+      } else {
+        this.waitAtFlag(creep);
+      }
     }
-
     return true;
   }
 

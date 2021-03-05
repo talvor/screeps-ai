@@ -3,6 +3,7 @@ import { StructBase } from './base';
 import { phaseController } from 'controllers/phase';
 import { roleBuilder } from 'roles/builder';
 import { roleHarvester } from 'roles/harvester';
+import { roleMiner } from 'roles/miner';
 import { roleUpgrader } from 'roles/upgrader';
 import { structRoad } from './road';
 
@@ -37,18 +38,19 @@ export class StructSpawner extends StructBase {
 
       // create a creep immediately
       roleHarvester.spawn(spawner);
-
-      // Create network of roads to common places
-      console.log('Create Network of Roads');
-      const sources = spawner.room.find(FIND_SOURCES);
-      structRoad.connect(spawner, sources);
-      if (spawner.room.controller) structRoad.connect(spawner.room.controller, sources);
     }
-    if (spawner.memory.level !== spawner.room.controller?.level) {
+    if (spawner.room.controller && spawner.memory.level !== spawner.room.controller.level) {
       // We can build things!
-      spawner.memory.level = spawner.room.controller?.level;
+      spawner.memory.level = spawner.room.controller.level;
+
+      // Place Container for each Source for miners
 
       if (spawner.memory.setup < 2) {
+        // Create network of roads to common places
+        console.log('Create Network of Roads');
+        const sources = spawner.room.find(FIND_SOURCES);
+        structRoad.connect(spawner, sources);
+        structRoad.connect(spawner.room.controller, sources);
         spawner.memory.setup = 2;
       }
     }
@@ -59,12 +61,12 @@ export class StructSpawner extends StructBase {
 
       if (roleHarvester.shouldSpawn(spawner)) {
         roleHarvester.spawn(spawner);
-        // } else if (roleMiner.shouldSpawn(spawner)) {
-        //   roleMiner.spawn(spawner);
-      } else if (roleBuilder.shouldSpawn(spawner)) {
-        roleBuilder.spawn(spawner);
+      } else if (roleMiner.shouldSpawn(spawner)) {
+        roleMiner.spawn(spawner);
       } else if (roleUpgrader.shouldSpawn(spawner)) {
         roleUpgrader.spawn(spawner);
+      } else if (roleBuilder.shouldSpawn(spawner)) {
+        roleBuilder.spawn(spawner);
         // } else if (roleRemoteBuilder.shouldSpawn(spawner)) {
         //   roleRemoteBuilder.spawn(spawner);
         // } else if (roleSettler.shouldSpawn(spawner)) {

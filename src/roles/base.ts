@@ -3,6 +3,8 @@ import { check, errorEmoji } from 'utils/errors';
 import { ROLES } from '../constants';
 import { phaseController } from 'controllers/phase';
 import { structRoad } from 'structures/road';
+
+const STORAGE_MINIMUM = 100;
 export abstract class RoleBase {
   private roleName: ROLES;
 
@@ -62,7 +64,7 @@ export abstract class RoleBase {
         delete creep.memory.blocked;
       }
       if (!disableRoadCheck) {
-        // structRoad.shouldBuildAt(creep);
+        structRoad.shouldBuildAt(creep);
       }
       return OK;
     } else if (code === ERR_NO_BODYPART) {
@@ -73,6 +75,8 @@ export abstract class RoleBase {
   }
 
   private pickupFallenResource(creep: Creep): boolean {
+    if (creep.name.startsWith(ROLES.Harvester)) return false;
+
     let resource: Resource | null = null;
     if (!creep.memory.fallenResourceId) {
       resource = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES) as Resource;
@@ -125,7 +129,13 @@ export abstract class RoleBase {
         return;
       } else {
         source = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-          filter: s => s.structureType === 'storage' || s.structureType === 'container'
+          filter: s => {
+            if (creep.name.startsWith(ROLES.Harvester)) return false;
+            return (
+              (s.structureType === 'storage' || s.structureType === 'container') &&
+              s.store.getUsedCapacity() > STORAGE_MINIMUM
+            );
+          }
         }) as StructureStorage | StructureContainer;
         // console.log(`${creep} withdraw ${source}`);
       }
@@ -145,7 +155,9 @@ export abstract class RoleBase {
 
       this.emote(creep, '🔄 harvest', code);
 
-      if (code === ERR_NOT_IN_RANGE) {
+      if (code === OK) {
+        delete creep.memory.sId;
+      } else if (code === ERR_NOT_IN_RANGE) {
         // code = this.travelTo(creep, source, '#ffaa00', creep.memory.noRoads || opts.notBuildRoads); // orange
         code = this.travelTo(creep, source, '#ffaa00'); // orange
         // What about using Storage???
@@ -173,7 +185,7 @@ export abstract class RoleBase {
     const count = creeps.length;
 
     if (!phaseRole) {
-      console.log(`No entry for role ${this.roleName} in Phase ${phase.level}`);
+      // console.log(`No entry for role ${this.roleName} in Phase ${phase.level}`);
       return false;
     }
 
@@ -268,5 +280,11 @@ export abstract class RoleBase {
       delete creep.memory.cId;
     }
     return true;
+  }
+
+  public waitAtFlag(creep: Creep): void {
+    const flag = creep.room.find(FIND_FLAGS, { filter: (f: Flag) => f.name === 'WaitPoint' })[0];
+    this.emote(creep, '🚏 waiting');
+    this.travelTo(creep, flag.pos, '#00FF3C'); // green
   }
 }

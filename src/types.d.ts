@@ -9,8 +9,11 @@ interface CreepMemory {
   rechargeId?: string;
   cId?: string;
   repairId?: string;
+  sourceId?: string;
   blocked?: number;
   origin?: string;
+  isReady?: boolean;
+  pos?: string;
 }
 
 interface Memory {
@@ -30,7 +33,7 @@ interface RoomMemory {
     [key: string]: boolean | string;
   };
   sMiners: {
-    [key: string]: number;
+    [key: string]: string;
   };
   lastChecked: number;
   storageId?: string;
@@ -65,7 +68,7 @@ interface BuildOrder {
 }
 
 interface IRole {
-  count: number;
+  count: number | string;
   parts: BodyPartConstant[];
   minimumEnergyToSpawn?: number;
   shardwide?: boolean;
@@ -79,4 +82,44 @@ interface IStructureOpts {
   avoidList?: any[];
   avoidIsCheckered?: boolean;
   structureFilter?: FilterFunction<FindConstant> | FilterObject;
+}
+
+interface IRoomLevel {
+  [key: number]: ILevelStructure;
+}
+
+interface ILevelStructure {
+  [key: string]: number;
+}
+
+interface IPosition {
+  x: number;
+  y: number;
+}
+
+// interface IMatrix {
+//   [key: number]: {
+//     [key: number]: IMatrixItem[];
+//   };
+// }
+interface IMatrix {
+  [y: number]: IMatrixItem[] | IMatrix;
+}
+interface IMatrixItem {
+  type: string;
+  constructionSite?: ConstructionSite;
+  creep?: Creep;
+  energy?: Resource<RESOURCE_ENERGY>;
+  exit?: any; // TODO what type is this?
+  flag?: Flag;
+  mineral?: Mineral;
+  deposit?: Deposit;
+  nuke?: Nuke;
+  resource?: Resource;
+  source?: Source;
+  structure?: Structure;
+  terrain?: Terrain;
+  tombstone?: Tombstone;
+  powerCreep?: PowerCreep;
+  ruin?: Ruin;
 }

@@ -1,5 +1,6 @@
 import { roleBuilder } from 'roles/builder';
 import { roleHarvester } from 'roles/harvester';
+import { roleMiner } from 'roles/miner';
 import { roleUpgrader } from 'roles/upgrader';
 
 class CreepController {
@@ -15,6 +16,7 @@ class CreepController {
     roleHarvester.run(creep);
     roleBuilder.run(creep);
     roleUpgrader.run(creep);
+    roleMiner.run(creep);
   }
 
   private preRun(creep: Creep): boolean {

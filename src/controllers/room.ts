@@ -36,7 +36,7 @@ export class RoomController {
       }
     });
     Game.rooms[roomName].find(FIND_SOURCES).forEach(source => {
-      data.sMiners[source.id] = 0;
+      data.sMiners[source.id] = '';
     });
     data.phase = 1;
     data.lastChecked = Game.time;

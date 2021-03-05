@@ -31,11 +31,13 @@ const PHASE_INFO: IPhase[] = [
           desiredContainerCount--;
         }
 
-        // console.log(`container: ${desiredContainerCount}. ext: ${desiredExtensionCount}`);
+        // console.log(`checkGoal container: ${desiredContainerCount}. ext: ${desiredExtensionCount}`);
         if (desiredContainerCount <= 0 && desiredExtensionCount <= 0) {
           return true;
         }
       }
+      console.log(`checkGoal container: ${desiredContainerCount}. ext: ${desiredExtensionCount}`);
+
       return false;
     },
     Harvester: {
@@ -71,7 +73,7 @@ const PHASE_INFO: IPhase[] = [
       return false;
     },
     Harvester: {
-      count: 1,
+      count: 2,
       minimumEnergyToSpawn: 250,
       parts: [WORK, CARRY, MOVE, MOVE, CARRY, WORK, MOVE, WORK, CARRY]
     },
@@ -81,9 +83,15 @@ const PHASE_INFO: IPhase[] = [
       parts: [WORK, CARRY, MOVE, MOVE, CARRY, WORK, MOVE, WORK, CARRY]
     },
     Builder: {
-      count: 2,
+      count: 4,
       minimumEnergyToSpawn: 250,
       parts: [WORK, CARRY, MOVE, MOVE, CARRY, WORK, MOVE, WORK, CARRY]
+    },
+    Miner: {
+      count: LOOK_SOURCES,
+      minimumEnergyToSpawn: 250,
+      // minimumEnergyToSpawn: 700,
+      parts: [MOVE, WORK, WORK, WORK, WORK, WORK, MOVE, MOVE] // 700
     }
   },
   {
@@ -94,19 +102,24 @@ const PHASE_INFO: IPhase[] = [
     spawnPeriod: 50,
     checkGoal: (): boolean => false,
     Harvester: {
-      count: 1,
+      count: 2,
       minimumEnergyToSpawn: 250,
       parts: [WORK, CARRY, MOVE, MOVE, CARRY, CARRY, MOVE, CARRY, CARRY]
     },
     Upgrader: {
-      count: 2,
+      count: 3,
       minimumEnergyToSpawn: 250,
       parts: [WORK, CARRY, MOVE, MOVE, CARRY, WORK, MOVE, WORK, CARRY]
     },
     Builder: {
-      count: 3,
+      count: 2,
       minimumEnergyToSpawn: 250,
       parts: [WORK, CARRY, MOVE, MOVE, CARRY, WORK, MOVE, WORK, CARRY]
+    },
+    Miner: {
+      count: LOOK_SOURCES,
+      minimumEnergyToSpawn: 700,
+      parts: [WORK, WORK, WORK, WORK, WORK, MOVE, MOVE, MOVE] // 700
     }
   }
 ];

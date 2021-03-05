@@ -2,6 +2,8 @@ import { buildController } from './build';
 import { creepController } from './creep';
 import { phaseController } from './phase';
 import { roomController } from './room';
+import { structContainer } from 'structures/container';
+import { structExtension } from 'structures/extension';
 import { structRoad } from 'structures/road';
 import { structSpawner } from 'structures/spawner';
 
@@ -57,28 +59,28 @@ export class GameController {
         }
       }
 
-      if (hasSpawner && Game.time % 100 === 3) {
-        // console.log('Attempting to build');
+      // if (hasSpawner && Game.time % 100 === 3) {
+      if (hasSpawner && Game.time % 10 === 3) {
+        console.log('Attempting to build');
         // console.log('build orders: ' + Memory.con[room.name].length + ' ' + JSON.stringify(Memory.con[room.name].map(x => x.type)));
         // RoomDefense.buildInRoom(room);
         // structExtension.buildInRoom(room);
         // StructTowers.buildInRoom(room);
         // StructStorage.buildInRoom(room);
-        // StructContainers.buildInRoom(room);
-        // structSpawner.buildInRoom(room);
+        structContainer.buildInRoom(room);
 
         // release new work for the builders if possible
         buildController.execute(room);
       }
 
       // Claimed a new room, build a spawner
-      // if (!hasSpawner && room.controller.my) {
-      //   const sites = Spawner.getMySites(room);
-      //   if (sites.length === 0) {
-      //     console.log(room + " building first spawner");
-      //     Spawner.buildInRoom(room);
-      //   }
-      // }
+      if (!hasSpawner && room.controller?.my) {
+        const sites = structSpawner.getMySites(room);
+        if (sites.length === 0) {
+          console.log(`${room.name} building first spawner`);
+          structSpawner.buildInRoom(room);
+        }
+      }
     }
 
     creepController.runAll(Object.values(Game.creeps));

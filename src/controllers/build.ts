@@ -1,4 +1,4 @@
-import { deserializePostion, serializePostion } from 'utils/position';
+import { deserializePosition, serializePosition } from 'utils/position';
 
 import { ORDER_STRUCTURES } from '../constants';
 import { check } from 'utils/errors';
@@ -37,7 +37,7 @@ export class BuildController {
     // caller should do this, before calling this method
 
     const orders = Memory.con[room.name] || [];
-    const pos = serializePostion(_pos);
+    const pos = serializePosition(_pos);
     const result = this.getScheduledAt(room, _pos);
 
     if (result && result.type === type) {
@@ -63,10 +63,21 @@ export class BuildController {
     return true;
   }
 
+  public getCount(_room: Room | string, filter: FilterFunction<FindConstant> | FilterObject): number {
+    const roomName = (_room as Room).name || (_room as string); // accept either Room Object or String
+    const orders = Memory.con[roomName] || [];
+    let res = orders.map(x => ({ structureType: x.type }));
+
+    res = _.filter(res, filter);
+
+    // console.log(type + ' ' + orders.length + ' ' + res.length);
+    return res.length;
+  }
+
   private getScheduledAt(room: Room, _pos: RoomPosition, type?: string): IBuildOrder | undefined {
     // type is optional
     const orders = Memory.con[room.name] || [];
-    const pos = serializePostion(_pos);
+    const pos = serializePosition(_pos);
     const result = orders.find(x => x.pos === pos) as IBuildOrder;
     if (type === undefined || type === result.type) {
       return result;
@@ -79,7 +90,7 @@ export class BuildController {
     const orders = Memory.con[roomName] || [];
     return orders.map(x => ({
       type: x.type,
-      pos: deserializePostion(x.pos as string)
+      pos: deserializePosition(x.pos as string)
     }));
   }
 
@@ -94,7 +105,7 @@ export class BuildController {
       if (order) {
         return {
           type: order.type,
-          pos: deserializePostion(order.pos as string)
+          pos: deserializePosition(order.pos as string)
         };
       }
     }
@@ -145,7 +156,7 @@ export class BuildController {
       const { type, pos } = orders.shift() as IBuildOrder;
 
       console.log(`BuildController.execute type=${type} pos=${pos}`);
-      const roomPos = deserializePostion(pos as string);
+      const roomPos = deserializePosition(pos as string);
 
       const roomName = roomPos.roomName;
       const _room = Game.rooms[roomName];
@@ -166,7 +177,7 @@ export class BuildController {
           }
         } else if (code === ERR_FULL || code === ERR_RCL_NOT_ENOUGH) {
           // unable to fullfill order, but can in the future, reschedule
-          orders.unshift({ type, pos: serializePostion(roomPos) });
+          orders.unshift({ type, pos: serializePosition(roomPos) });
           if (code === ERR_FULL) break;
         }
       } else {

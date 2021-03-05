@@ -8,8 +8,8 @@ interface iOpts {
 
 export class AvoidStructure {
   private structureType: StructureConstant;
-  private range: number;
-  private type: number;
+  public range: number;
+  public type: number;
   private isCheckered: boolean;
 
   public constructor(structureType: StructureConstant, opts: iOpts = {}) {
