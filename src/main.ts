@@ -1,3 +1,5 @@
+import './globals';
+
 import { ErrorMapper } from 'utils/ErrorMapper';
 import { gameController } from 'controllers/game';
 

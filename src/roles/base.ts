@@ -259,6 +259,7 @@ export abstract class RoleBase {
     }
     if (!target) {
       target = creep.pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES) as ConstructionSite;
+      // target = creep.room.find(FIND_CONSTRUCTION_SITES)[0];
     }
 
     if (target) {
@@ -284,7 +285,9 @@ export abstract class RoleBase {
 
   public waitAtFlag(creep: Creep): void {
     const flag = creep.room.find(FIND_FLAGS, { filter: (f: Flag) => f.name === 'WaitPoint' })[0];
-    this.emote(creep, '🚏 waiting');
-    this.travelTo(creep, flag.pos, '#00FF3C'); // green
+    if (flag) {
+      this.emote(creep, '🚏 waiting');
+      this.travelTo(creep, flag.pos, '#00FF3C'); // green
+    }
   }
 }

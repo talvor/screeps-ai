@@ -2,6 +2,7 @@ import { ROLES } from '../constants';
 import { RoleBase } from './base';
 import { check } from 'utils/errors';
 import { deserializePosition, positionEquals, serializePosition } from 'utils/position';
+import { buildController } from 'controllers/build';
 
 const ROLE = ROLES.Miner;
 
@@ -36,6 +37,10 @@ export class RoleMiner extends RoleBase {
 
           room.memory.sMiners[sId] = creep.id;
           creep.memory.sourceId = sId;
+
+          if (this.shouldBuildContainer(room, Game.getObjectById(creep.memory.sourceId) as Source)) {
+            creep.say('🏗️ container');
+          }
           break;
         }
       }
@@ -59,7 +64,11 @@ export class RoleMiner extends RoleBase {
           containerPos = container.pos;
           creep.memory.pos = serializePosition(containerPos);
         } else {
-          containerPos = deserializePosition(creep.memory.pos as string);
+          if (!creep.memory.pos) {
+            delete creep.memory.isReady;
+            return false;
+          }
+          containerPos = deserializePosition(creep.memory.pos);
         }
         if (positionEquals(creep.pos, containerPos)) {
           creep.memory.isReady = true;
@@ -119,7 +128,23 @@ export class RoleMiner extends RoleBase {
     }
   }
 
-  public gc(): void {}
+  private shouldBuildContainer(room: Room, source: Source): boolean {
+    console.log(`Miner.shouldBuildContainer`);
+    if (room.controller) {
+      const pathToController = PathFinder.search(source.pos, room.controller.pos);
+      const site = pathToController.path[0];
+
+      const structuresAtSite = room.lookForAt(LOOK_STRUCTURES, site);
+      const constructionsAtSite = room.lookForAt(LOOK_CONSTRUCTION_SITES, site);
+
+      console.log(JSON.stringify(structuresAtSite));
+      console.log(JSON.stringify(constructionsAtSite));
+
+      return buildController.schedule(room, STRUCTURE_CONTAINER, site, true);
+    }
+
+    return false;
+  }
 }
 
 export const roleMiner = new RoleMiner();

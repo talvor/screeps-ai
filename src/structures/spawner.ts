@@ -1,4 +1,3 @@
-import { AVOID_LIST } from 'utils/Avoid';
 import { StructBase } from './base';
 import { phaseController } from 'controllers/phase';
 import { roleBuilder } from 'roles/builder';
@@ -9,21 +8,7 @@ import { structRoad } from './road';
 
 export class StructSpawner extends StructBase {
   public constructor() {
-    const modifiedSource = Object.assign({}, AVOID_LIST[LOOK_SOURCES], { range: 3 });
-
-    super(STRUCTURE_SPAWN, {
-      minFreeAdjSpaces: 3,
-      minPlacementDistance: 3,
-      avoidList: [
-        AVOID_LIST[STRUCTURE_ROAD],
-        AVOID_LIST[STRUCTURE_SPAWN],
-        AVOID_LIST[STRUCTURE_CONTROLLER],
-        AVOID_LIST[STRUCTURE_EXTENSION],
-        AVOID_LIST[STRUCTURE_CONTAINER],
-        AVOID_LIST[STRUCTURE_STORAGE],
-        modifiedSource
-      ]
-    });
+    super(STRUCTURE_SPAWN);
   }
 
   public run(spawner: StructureSpawn): void {

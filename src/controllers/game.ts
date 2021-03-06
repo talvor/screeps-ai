@@ -61,12 +61,7 @@ export class GameController {
 
       if (hasSpawner && Game.time % 100 === 3) {
         console.log('Attempting to build');
-        // console.log('build orders: ' + Memory.con[room.name].length + ' ' + JSON.stringify(Memory.con[room.name].map(x => x.type)));
-        // RoomDefense.buildInRoom(room);
-        // structExtension.buildInRoom(room);
-        // StructTowers.buildInRoom(room);
-        // StructStorage.buildInRoom(room);
-        structContainer.buildInRoom(room);
+        roomController.checkCityMap(room);
 
         // release new work for the builders if possible
         buildController.execute(room);
@@ -77,7 +72,6 @@ export class GameController {
         const sites = structSpawner.getMySites(room);
         if (sites.length === 0) {
           console.log(`${room.name} building first spawner`);
-          structSpawner.buildInRoom(room);
         }
       }
     }
@@ -94,6 +88,7 @@ export class GameController {
     }
 
     structRoad.gc();
+    buildController.gc();
   }
 }
 

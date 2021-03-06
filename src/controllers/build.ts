@@ -16,7 +16,7 @@ function priorityStructureSort(a: IBuildOrder, b: IBuildOrder) {
   return ORDER_STRUCTURES.indexOf(a.type) - ORDER_STRUCTURES.indexOf(b.type);
 }
 
-const _constructionSites: {
+let _constructionSites: {
   [key: string]: ConstructionSite[];
 } = {};
 let _howmanySites = 0;
@@ -32,7 +32,7 @@ export class BuildController {
     if (!Memory.con) Memory.con = {};
   }
 
-  public schedule(room: Room, type: BuildableStructureConstant, _pos: RoomPosition): boolean {
+  public schedule(room: Room, type: BuildableStructureConstant, _pos: RoomPosition, priorityBuild = false): boolean {
     // schedule does not check if _pos is occupied.
     // caller should do this, before calling this method
 
@@ -56,7 +56,7 @@ export class BuildController {
 
     // otherwise, nothing is here. Schedule the build.
     Memory.buildOrderCount = Memory.buildOrderCount || 1;
-    orders.push({ type, pos, queue: Memory.buildOrderCount++ });
+    orders.push({ type, pos, queue: priorityBuild ? 0 : Memory.buildOrderCount++ });
     orders.sort(priorityStructureSort);
 
     Memory.con[room.name] = orders;
@@ -185,6 +185,11 @@ export class BuildController {
       }
     }
     return howmany;
+  }
+
+  public gc(): void {
+    _constructionSites = {};
+    _howmanySites = 0;
   }
 }
 

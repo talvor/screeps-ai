@@ -26,8 +26,10 @@ interface Memory {
 }
 
 interface RoomMemory {
+  controllerId?: string;
   setup: number;
   phase: number;
+  level: number;
   roomName: string;
   exits: {
     [key: string]: boolean | string;
@@ -53,6 +55,9 @@ interface Creep {
 declare namespace NodeJS {
   interface Global {
     log: any;
+    findCityArea: (roomName: string) => void;
+    getCityMap: (phaseNumber: number) => ICityMapLevel;
+    checkMap: (roomName: string) => void;
   }
 }
 
@@ -76,11 +81,6 @@ interface IRole {
 
 // Interfaces
 interface IStructureOpts {
-  howmanyAtEachPoi?: number;
-  minFreeAdjSpaces?: number;
-  minPlacementDistance?: number;
-  avoidList?: any[];
-  avoidIsCheckered?: boolean;
   structureFilter?: FilterFunction<FindConstant> | FilterObject;
 }
 
@@ -123,3 +123,24 @@ interface IMatrixItem {
   powerCreep?: PowerCreep;
   ruin?: Ruin;
 }
+
+interface IBounds {
+  nw: IPosition;
+  ne: IPosition;
+  sw: IPosition;
+  se: IPosition;
+}
+
+interface ICityMapLevel {
+  rcl: string;
+  buildings: CityMapBuildings;
+  additional?: CityMapAdditional;
+}
+
+type CityMapBuildings = {
+  [key in BuildableStructureConstant]?: {
+    pos: IPosition[];
+  };
+};
+type CityMap = ICityMapLevel[];
+type CityMapAdditional = (room: Room) => CityMapBuildings;

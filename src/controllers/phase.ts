@@ -31,7 +31,6 @@ const PHASE_INFO: IPhase[] = [
           desiredContainerCount--;
         }
 
-        // console.log(`checkGoal container: ${desiredContainerCount}. ext: ${desiredExtensionCount}`);
         if (desiredContainerCount <= 0 && desiredExtensionCount <= 0) {
           return true;
         }
@@ -43,7 +42,7 @@ const PHASE_INFO: IPhase[] = [
     Harvester: {
       minimumEnergyToSpawn: 250,
       count: 2,
-      parts: [WORK, CARRY, MOVE] // 250
+      parts: [WORK, CARRY, MOVE, MOVE, CARRY, WORK, MOVE, WORK, CARRY]
     },
     Upgrader: {
       count: 4,
@@ -53,7 +52,7 @@ const PHASE_INFO: IPhase[] = [
     Builder: {
       count: 4,
       minimumEnergyToSpawn: 250,
-      parts: [WORK, CARRY, MOVE] // 250
+      parts: [WORK, CARRY, MOVE, MOVE, CARRY, WORK, MOVE, WORK, CARRY]
     }
   },
   {
@@ -126,8 +125,10 @@ const PHASE_INFO: IPhase[] = [
 
 export class PhaseController {
   private getPhaseInfo(phaseNumber: number): IPhase {
+    phaseNumber = phaseNumber || 1;
     return PHASE_INFO[phaseNumber - 1];
   }
+
   public getCurrentPhaseInfo(room: Room): IPhase {
     let num = this.getCurrentPhaseNumber(room);
     while (!PHASE_INFO[num]) {
