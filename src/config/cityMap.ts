@@ -158,7 +158,7 @@ function calcBuildingDelta(buildings: CityMapBuildings): CityMapBuildings {
   return result;
 }
 
-export const getCityMapForPhase = (level: number): ICityMapLevel | undefined => {
+export const getCityMapForRCL = (level: number): ICityMapLevel | undefined => {
   let num = level;
   let cityLevel;
   do {

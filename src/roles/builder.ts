@@ -10,16 +10,13 @@ export class RoleBuilder extends RoleBase {
     super(ROLE);
   }
 
-  public run(creep: Creep): boolean {
+  public run(creep: Creep, hasTowers: IHasTowers): boolean {
     if (creep.busy || !this.is(creep)) return false;
 
-    // const skipRepair = hasTowers[creep.room.name];
+    const skipRepair = hasTowers[creep.room.name];
 
     if (creep.memory.full) {
-      // this.fortify(creep);
-
-      // if (!creep.busy && !skipRepair) {
-      if (!creep.busy) {
+      if (!creep.busy && !skipRepair) {
         this.repair(creep);
       }
 

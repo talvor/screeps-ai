@@ -14,6 +14,8 @@ interface CreepMemory {
   origin?: string;
   isReady?: boolean;
   pos?: string;
+  recycle?: string | number;
+  renew?: string | number;
 }
 
 interface Memory {
@@ -22,6 +24,7 @@ interface Memory {
   gcl: number;
   roads: Record<string, number[]>;
   con: Record<string, IBuildOrder[]>;
+  towers: Record<string, { repairId?: string }>;
   buildOrderCount: number;
 }
 
@@ -48,6 +51,10 @@ interface SpawnMemory {
 
 // Object extensions
 interface Creep {
+  busy: number;
+}
+
+interface StructureTower {
   busy: number;
 }
 
@@ -144,3 +151,7 @@ type CityMapBuildings = {
 };
 type CityMap = ICityMapLevel[];
 type CityMapAdditional = (room: Room) => CityMapBuildings;
+
+interface IHasTowers {
+  [key: string]: boolean;
+}

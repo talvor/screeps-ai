@@ -1,4 +1,4 @@
-import { cityEdges, getCityMapForPhase } from './config/cityMap';
+import { cityEdges, getCityMapForRCL } from './config/cityMap';
 import { ErrorMapper } from 'utils/ErrorMapper';
 import { roomController } from 'controllers/room';
 
@@ -31,8 +31,8 @@ global.findCityArea = function (roomName: string): void {
   console.log(`areaTerrain = ${JSON.stringify(areaTerrain)}`);
 };
 
-global.getCityMap = function (phaseNumber: number): ICityMapLevel {
-  return getCityMapForPhase(phaseNumber) as ICityMapLevel;
+global.getCityMap = function (rcl: number): ICityMapLevel {
+  return getCityMapForRCL(rcl) as ICityMapLevel;
 };
 
 global.checkMap = function (roomName: string): void {

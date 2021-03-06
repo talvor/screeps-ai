@@ -2,10 +2,9 @@ import { buildController } from './build';
 import { creepController } from './creep';
 import { phaseController } from './phase';
 import { roomController } from './room';
-import { structContainer } from 'structures/container';
-import { structExtension } from 'structures/extension';
 import { structRoad } from 'structures/road';
 import { structSpawner } from 'structures/spawner';
+import { structTower } from 'structures/tower';
 
 export class GameController {
   public preRun(): void {
@@ -34,9 +33,7 @@ export class GameController {
   }
 
   public run(): void {
-    const hasTowers: {
-      [key: string]: boolean;
-    } = {};
+    const hasTowers: IHasTowers = {};
 
     for (const roomName in Game.rooms) {
       const room = Game.rooms[roomName];
@@ -54,16 +51,13 @@ export class GameController {
           hasSpawner = true;
           structSpawner.run(s);
         } else if (s.structureType === STRUCTURE_TOWER) {
-          // Towers.run(s);
+          structTower.run(s);
           hasTowers[roomName] = true;
         }
       }
 
       if (hasSpawner && Game.time % 100 === 3) {
-        console.log('Attempting to build');
         roomController.checkCityMap(room);
-
-        // release new work for the builders if possible
         buildController.execute(room);
       }
 
@@ -76,7 +70,7 @@ export class GameController {
       }
     }
 
-    creepController.runAll(Object.values(Game.creeps));
+    creepController.runAll(Object.values(Game.creeps), hasTowers);
   }
 
   public postRun(): void {

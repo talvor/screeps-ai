@@ -129,18 +129,33 @@ export class RoleMiner extends RoleBase {
   }
 
   private shouldBuildContainer(room: Room, source: Source): boolean {
-    console.log(`Miner.shouldBuildContainer`);
     if (room.controller) {
       const pathToController = PathFinder.search(source.pos, room.controller.pos);
       const site = pathToController.path[0];
 
-      const structuresAtSite = room.lookForAt(LOOK_STRUCTURES, site);
-      const constructionsAtSite = room.lookForAt(LOOK_CONSTRUCTION_SITES, site);
+      const structsAtPos = room.lookForAt(LOOK_STRUCTURES, site);
+      const constAtPos = room.lookForAt(LOOK_CONSTRUCTION_SITES, site);
 
-      console.log(JSON.stringify(structuresAtSite));
-      console.log(JSON.stringify(constructionsAtSite));
+      let okToBuild = false;
 
-      return buildController.schedule(room, STRUCTURE_CONTAINER, site, true);
+      if (!okToBuild && constAtPos[0] && constAtPos[0].structureType !== STRUCTURE_CONTAINER) {
+        constAtPos[0].remove();
+        okToBuild = true;
+      }
+
+      if (!okToBuild && structsAtPos[0] && structsAtPos[0].structureType === STRUCTURE_ROAD) {
+        structsAtPos[0].destroy();
+        okToBuild = true;
+      }
+
+      if (!structsAtPos[0] && !constAtPos[0]) {
+        okToBuild = true;
+      }
+
+      if (okToBuild) {
+        return buildController.schedule(room, STRUCTURE_CONTAINER, site, true);
+      }
+      return false;
     }
 
     return false;

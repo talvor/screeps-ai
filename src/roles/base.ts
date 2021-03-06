@@ -130,14 +130,13 @@ export abstract class RoleBase {
       } else {
         source = creep.pos.findClosestByPath(FIND_STRUCTURES, {
           filter: s => {
-            if (creep.name.startsWith(ROLES.Harvester)) return false;
+            // if (creep.name.startsWith(ROLES.Harvester)) return false;
             return (
               (s.structureType === 'storage' || s.structureType === 'container') &&
               s.store.getUsedCapacity() > STORAGE_MINIMUM
             );
           }
         }) as StructureStorage | StructureContainer;
-        // console.log(`${creep} withdraw ${source}`);
       }
       if (!source) {
         source = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE) as Source;

@@ -1,8 +1,6 @@
 import { EXITS } from '../constants';
-import { getCityMapForPhase } from 'config/cityMap';
 import { buildController } from 'controllers/build';
-import { phaseController } from 'controllers/phase';
-import { add } from 'lodash';
+import { getCityMapForRCL } from 'config/cityMap';
 
 const _lowHealthStructs: { [key: string]: AnyStructure[] } = {};
 
@@ -85,8 +83,7 @@ export class RoomController {
 
   public checkCityMap(room: Room): void {
     const level = room.controller?.level || 1;
-    // const phase = 2;
-    const cityMap = getCityMapForPhase(level);
+    const cityMap = getCityMapForRCL(level);
     const spawnPosition = room.find(FIND_MY_SPAWNS)[0].pos;
 
     if (cityMap) {
