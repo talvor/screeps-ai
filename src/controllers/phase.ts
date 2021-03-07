@@ -12,6 +12,12 @@ export interface IPhase extends RoleFields {
 
 const PHASE_INFO: IPhase[] = [
   {
+    level: 0,
+    checkLevelPeriod: 1001,
+    spawnPeriod: 25,
+    checkGoal: (): boolean => true
+  },
+  {
     // Intro level.
     level: 1,
     checkLevelPeriod: 1001,
@@ -101,17 +107,17 @@ const PHASE_INFO: IPhase[] = [
     spawnPeriod: 50,
     checkGoal: (): boolean => false,
     Harvester: {
-      count: 2,
+      count: 3,
       minimumEnergyToSpawn: 250,
       parts: [WORK, CARRY, MOVE, MOVE, CARRY, CARRY, MOVE, CARRY, CARRY]
     },
     Upgrader: {
-      count: 3,
+      count: 6,
       minimumEnergyToSpawn: 250,
       parts: [WORK, CARRY, MOVE, MOVE, CARRY, WORK, MOVE, WORK, CARRY]
     },
     Builder: {
-      count: 2,
+      count: 4,
       minimumEnergyToSpawn: 250,
       parts: [WORK, CARRY, MOVE, MOVE, CARRY, WORK, MOVE, WORK, CARRY]
     },
@@ -126,11 +132,12 @@ const PHASE_INFO: IPhase[] = [
 export class PhaseController {
   private getPhaseInfo(phaseNumber: number): IPhase {
     phaseNumber = phaseNumber || 1;
-    return PHASE_INFO[phaseNumber - 1];
+    return PHASE_INFO[phaseNumber];
   }
 
   public getCurrentPhaseInfo(room: Room): IPhase {
     let num = this.getCurrentPhaseNumber(room);
+
     while (!PHASE_INFO[num]) {
       num--;
       if (num < 0) {

@@ -207,6 +207,7 @@ export abstract class RoleBase {
       // optional field
       hasEnoughEnergy = phaseRole.minimumEnergyToSpawn < spawner.room.energyAvailable;
     }
+
     return count < desiredCount && hasEnoughEnergy;
   }
 

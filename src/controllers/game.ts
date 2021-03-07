@@ -30,6 +30,7 @@ export class GameController {
 
     buildController.preRun();
     roomController.preRun();
+    structTower.preRun();
   }
 
   public run(): void {

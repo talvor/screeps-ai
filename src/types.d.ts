@@ -24,7 +24,7 @@ interface Memory {
   gcl: number;
   roads: Record<string, number[]>;
   con: Record<string, IBuildOrder[]>;
-  towers: Record<string, { repairId?: string }>;
+  towers: Record<string, { repairId?: string; _say?: string }>;
   buildOrderCount: number;
 }
 

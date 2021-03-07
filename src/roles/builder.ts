@@ -24,6 +24,7 @@ export class RoleBuilder extends RoleBase {
         this.build(creep);
       }
     }
+
     if (!creep.busy) {
       if (!creep.memory.full) {
         roleHarvester.harvest(creep);

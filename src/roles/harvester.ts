@@ -41,14 +41,18 @@ export class RoleHarvester extends RoleBase {
       structure = creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
         filter: s => {
           return (
-            (s.structureType === STRUCTURE_EXTENSION ||
-              s.structureType === STRUCTURE_SPAWN ||
-              // s.structureType === STRUCTURE_CONTAINER ||
-              s.structureType === STRUCTURE_TOWER) &&
+            (s.structureType === STRUCTURE_EXTENSION || s.structureType === STRUCTURE_SPAWN) &&
             s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
           );
         }
-      }) as StructureExtension | StructureSpawn | StructureTower;
+      }) as StructureExtension | StructureSpawn;
+
+      if (!structure) {
+        // if things do not need to be recharged, fill up storage.
+        structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+          filter: s => s.structureType === STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+        }) as StructureTower;
+      }
 
       if (!structure) {
         // if things do not need to be recharged, fill up storage.
@@ -80,7 +84,13 @@ export class RoleHarvester extends RoleBase {
         delete creep.memory.rechargeId;
       }
     } else {
-      this.waitAtFlag(creep);
+      if (creep.store.getFreeCapacity() > 0) {
+        delete creep.memory.full;
+        delete creep.memory.rechargeId;
+        this.harvest(creep);
+      } else {
+        this.waitAtFlag(creep);
+      }
     }
   }
 }

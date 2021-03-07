@@ -61,17 +61,28 @@ export class RoomController {
     room = Game.rooms[roomName];
 
     if (!_lowHealthStructs[roomName]) {
-      _lowHealthStructs[roomName] = room.find<AnyStructure>(FIND_STRUCTURES, {
+      const lowHealthBuildings = room.find<AnyStructure>(FIND_STRUCTURES, {
         filter: (s: AnyStructure | StructureWall | StructureRampart) => {
           if (!s.hits || !s.hitsMax) return false;
+          if (s.structureType === STRUCTURE_ROAD) return false;
           if (s.structureType === STRUCTURE_WALL || s.structureType === STRUCTURE_RAMPART) return false;
 
           const healthRatio = this.healthRatio(s.hits, s.hitsMax);
-          const threshold = s.structureType === STRUCTURE_ROAD ? roadThreshold : structureThreshold;
-
-          return healthRatio < threshold;
+          return healthRatio < structureThreshold;
         }
       });
+
+      const lowHeathRoads = room.find<AnyStructure>(FIND_STRUCTURES, {
+        filter: (s: AnyStructure | StructureWall | StructureRampart) => {
+          if (!s.hits || !s.hitsMax) return false;
+          if (s.structureType !== STRUCTURE_ROAD) return false;
+
+          const healthRatio = this.healthRatio(s.hits, s.hitsMax);
+
+          return healthRatio < roadThreshold;
+        }
+      });
+      _lowHealthStructs[roomName] = lowHealthBuildings.length ? lowHealthBuildings : lowHeathRoads;
     }
 
     if (!_lowHealthStructs[roomName] || _lowHealthStructs[roomName].length === 0) return;

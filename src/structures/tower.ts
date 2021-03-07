@@ -7,6 +7,10 @@ export class StructTower extends StructBase {
     super(STRUCTURE_TOWER);
   }
 
+  public preRun(): void {
+    if (!Memory.towers) Memory.towers = {};
+  }
+
   public run(tower: StructureTower): void {
     const closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
     // console.log(`${tower} - ${closestHostile}`);
@@ -37,7 +41,7 @@ export class StructTower extends StructBase {
 
   public repair(tower: StructureTower, repairThreshold = 0.2, desiredHealthPercent = 0.95): void {
     if (!Memory.towers[tower.id]) Memory.towers[tower.id] = {};
-
+    if ((tower.room.controller as StructureController).level < 3) return;
     const repairId = Memory.towers[tower.id].repairId;
     let structure;
 
@@ -47,19 +51,19 @@ export class StructTower extends StructBase {
       Memory.towers[tower.id].repairId = structure.id;
     }
     if (repairId) {
-      if (!structure) {
-        structure = Game.getObjectById(repairId) as Structure;
-
+      structure = Game.getObjectById(repairId) as Structure;
+      if (structure) {
         const ratio = roomController.healthRatio(structure.hits, structure.hitsMax);
         if (!structure || ratio > desiredHealthPercent) {
           structure = undefined;
           delete Memory.towers[tower.id].repairId;
+          delete Memory.towers[tower.id]._say;
         }
       }
 
       if (structure) {
         const code = tower.repair(structure);
-        // this.emote(tower, '🔧 repair', code)
+        this.emote(tower, `🔧 repair ${structure.structureType} @ ${structure.pos}`, code);
         check(tower, `repair(${structure})`, code);
         if (code === ERR_INVALID_TARGET) {
           delete Memory.towers[tower.id].repairId;
@@ -68,6 +72,19 @@ export class StructTower extends StructBase {
         }
       }
     }
+  }
+
+  public emote(
+    tower: StructureTower,
+    phrase: string,
+    code: number = OK,
+    errorList: number[] = [OK, ERR_NOT_IN_RANGE]
+  ): void {
+    if (!phrase || Memory.towers[tower.id]._say === phrase) return;
+    if (undefined === errorList.find(c => c === code)) return;
+
+    console.log(phrase);
+    Memory.towers[tower.id]._say = phrase;
   }
 }
 
