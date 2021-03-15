@@ -1,3 +1,5 @@
+import { link } from 'fs';
+
 export const cityEdges = { n: -5, e: 5, s: 5, w: -5 };
 export const cityMap: CityMap = [
   {
@@ -23,14 +25,16 @@ export const cityMap: CityMap = [
         const controller = room.controller;
         const sources = room.find(FIND_SOURCES);
 
-        const positions: IPosition[] = _.map(sources, source => {
+        const containerPositions: IPosition[] = [];
+
+        _.forEach(sources, source => {
           const pathToController = PathFinder.search(source.pos, controller.pos);
           const site = pathToController.path[0];
 
-          return { x: site.x, y: site.y };
+          containerPositions.push({ x: site.x, y: site.y });
         });
 
-        return { [STRUCTURE_CONTAINER]: { pos: positions } };
+        return { [STRUCTURE_CONTAINER]: { pos: containerPositions } };
       }
       return {};
     }
@@ -60,14 +64,16 @@ export const cityMap: CityMap = [
         const controller = room.controller;
         const sources = room.find(FIND_SOURCES);
 
-        const positions: IPosition[] = _.map(sources, source => {
+        const containerPositions: IPosition[] = [];
+
+        _.forEach(sources, source => {
           const pathToController = PathFinder.search(source.pos, controller.pos);
           const site = pathToController.path[0];
 
-          return { x: site.x, y: site.y };
+          containerPositions.push({ x: site.x, y: site.y });
         });
 
-        return { [STRUCTURE_CONTAINER]: { pos: positions } };
+        return { [STRUCTURE_CONTAINER]: { pos: containerPositions } };
       }
       return {};
     }
@@ -108,14 +114,16 @@ export const cityMap: CityMap = [
         const controller = room.controller;
         const sources = room.find(FIND_SOURCES);
 
-        const positions: IPosition[] = _.map(sources, source => {
+        const containerPositions: IPosition[] = [];
+
+        _.forEach(sources, source => {
           const pathToController = PathFinder.search(source.pos, controller.pos);
           const site = pathToController.path[0];
 
-          return { x: site.x, y: site.y };
+          containerPositions.push({ x: site.x, y: site.y });
         });
 
-        return { [STRUCTURE_CONTAINER]: { pos: positions } };
+        return { [STRUCTURE_CONTAINER]: { pos: containerPositions } };
       }
       return {};
     }
@@ -170,16 +178,87 @@ export const cityMap: CityMap = [
     additional: (room: Room): CityMapBuildings => {
       if (room.controller) {
         const controller = room.controller;
+        // We need a container per source
         const sources = room.find(FIND_SOURCES);
 
-        const positions: IPosition[] = _.map(sources, source => {
+        const containerPositions: IPosition[] = [];
+
+        _.forEach(sources, source => {
           const pathToController = PathFinder.search(source.pos, controller.pos);
           const site = pathToController.path[0];
 
-          return { x: site.x, y: site.y };
+          containerPositions.push({ x: site.x, y: site.y });
         });
+        return { [STRUCTURE_CONTAINER]: { pos: containerPositions } };
+      }
+      return {};
+    }
+  },
+  {
+    rcl: '6',
+    buildings: {
+      tower: {
+        pos: [
+          { x: 5, y: 0 },
+          { x: 5, y: 10 }
+        ]
+      },
+      extension: {
+        pos: [
+          { x: 4, y: 1 },
+          { x: 6, y: 1 },
+          { x: 8, y: 1 },
+          { x: 3, y: 2 },
+          { x: 5, y: 2 },
+          { x: 7, y: 2 },
+          { x: 9, y: 2 },
+          { x: 2, y: 3 },
+          { x: 4, y: 3 },
+          { x: 6, y: 3 },
+          { x: 8, y: 3 },
+          { x: 1, y: 4 },
+          { x: 3, y: 4 },
+          { x: 7, y: 4 },
+          { x: 9, y: 4 },
+          { x: 2, y: 5 },
+          { x: 8, y: 5 },
+          { x: 1, y: 6 },
+          { x: 3, y: 6 },
+          { x: 7, y: 6 },
+          { x: 9, y: 6 },
+          { x: 2, y: 7 },
+          { x: 4, y: 7 },
+          { x: 6, y: 7 },
+          { x: 8, y: 7 },
+          { x: 3, y: 8 },
+          { x: 5, y: 8 },
+          { x: 7, y: 8 },
+          { x: 4, y: 9 },
+          { x: 6, y: 9 }
+        ]
+      },
+      spawn: { pos: [{ x: 5, y: 5 }] },
+      storage: { pos: [{ x: 10, y: 5 }] },
+      link: { pos: [{ x: 11, y: 5 }] }
+    },
+    additional: (room: Room): CityMapBuildings => {
+      if (room.controller) {
+        const controller = room.controller;
+        // We need a container per source and link per container
+        const sources = room.find(FIND_SOURCES);
 
-        return { [STRUCTURE_CONTAINER]: { pos: positions } };
+        const containerPositions: IPosition[] = [];
+        const linkPositions: IPosition[] = [];
+
+        _.forEach(sources, source => {
+          const pathToController = PathFinder.search(source.pos, controller.pos);
+          const site = pathToController.path[0];
+          const site2 = pathToController.path[2];
+
+          containerPositions.push({ x: site.x, y: site.y });
+          linkPositions.push({ x: site2.x, y: site2.y });
+        });
+        return { [STRUCTURE_CONTAINER]: { pos: containerPositions }, [STRUCTURE_LINK]: { pos: linkPositions } };
       }
       return {};
     }
