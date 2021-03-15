@@ -2,6 +2,7 @@ import { roleBuilder } from 'roles/builder';
 import { roleHarvester } from 'roles/harvester';
 import { roleMiner } from 'roles/miner';
 import { roleUpgrader } from 'roles/upgrader';
+import { structLink } from 'structures/link';
 
 class CreepController {
   public runAll(creeps: Creep[], hasTowers: IHasTowers): void {
@@ -28,6 +29,7 @@ class CreepController {
       }
       // TODO Inform a Spawner to replace the creep.
       delete Memory.creeps[creep.name];
+      structLink.removeHarvester(creep);
       return false;
     }
 

@@ -25,6 +25,7 @@ interface Memory {
   roads: Record<string, number[]>;
   con: Record<string, IBuildOrder[]>;
   towers: Record<string, { repairId?: string; _say?: string }>;
+  links: Record<string, { targetId?: string; isStorageLink?: boolean; harvesterId?: string }>;
   buildOrderCount: number;
 }
 
@@ -80,7 +81,7 @@ interface BuildOrder {
 }
 
 interface IRole {
-  count: number | string;
+  count: number | string | ((spawner: StructureSpawn) => number);
   parts: BodyPartConstant[];
   minimumEnergyToSpawn?: number;
   shardwide?: boolean;

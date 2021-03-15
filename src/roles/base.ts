@@ -1,10 +1,9 @@
+import { ROLES, STORAGE_MINIMUM } from '../constants';
 import { check, errorEmoji } from 'utils/errors';
 
-import { ROLES } from '../constants';
 import { phaseController } from 'controllers/phase';
 import { structRoad } from 'structures/road';
 
-const STORAGE_MINIMUM = 100;
 export abstract class RoleBase {
   private roleName: ROLES;
 
@@ -37,7 +36,7 @@ export abstract class RoleBase {
 
   public travelTo(
     creep: Creep,
-    target: RoomPosition | StructureStorage | StructureContainer | Source,
+    target: RoomPosition | StructureStorage | StructureContainer | StructureLink | Source,
     color: string,
     disableRoadCheck?: boolean
   ): number | undefined {
@@ -115,7 +114,7 @@ export abstract class RoleBase {
     return true;
   }
 
-  public harvest(creep: Creep): StructureStorage | StructureContainer | Source | undefined {
+  public harvest(creep: Creep): AnyStructure | Source | undefined {
     let source: StructureStorage | StructureContainer | Source | undefined;
 
     if (creep.busy) return;
@@ -130,7 +129,6 @@ export abstract class RoleBase {
       } else {
         source = creep.pos.findClosestByPath(FIND_STRUCTURES, {
           filter: s => {
-            // if (creep.name.startsWith(ROLES.Harvester)) return false;
             return (
               (s.structureType === 'storage' || s.structureType === 'container') &&
               s.store.getUsedCapacity() > STORAGE_MINIMUM
@@ -142,6 +140,7 @@ export abstract class RoleBase {
         source = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE) as Source;
       }
     }
+
     if (source) {
       creep.memory.sId = source.id;
       let code;
@@ -194,11 +193,13 @@ export abstract class RoleBase {
     } else if (phaseRole.count === LOOK_SOURCES) {
       const objs = spawner.room.find(FIND_SOURCES) || [];
       desiredCount = objs.length || 0;
+    } else if (typeof phaseRole.count === 'function') {
+      desiredCount = phaseRole.count(spawner);
     } else {
       console.log(
         `count for role ${this.roleName} in Phase ${
           phase.level
-        } needs to be a string or number: ${typeof phaseRole.count}`
+        } needs to be a string, number or function: ${typeof phaseRole.count}`
       );
     }
 

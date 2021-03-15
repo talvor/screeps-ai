@@ -1,5 +1,8 @@
-import { ROLES } from '../constants';
+import { ROLES, STORAGE_MINIMUM } from '../constants';
+
 import { RoleBase } from './base';
+import { phaseController } from 'controllers/phase';
+import { structLink } from 'structures/link';
 
 const ROLE = ROLES.Harvester;
 
@@ -19,13 +22,81 @@ export class RoleHarvester extends RoleBase {
     return true;
   }
 
-  private recharge(creep: Creep) {
+  public harvest(creep: Creep): StructureLink | StructureStorage | StructureContainer | Source | undefined {
+    let source: StructureLink | StructureStorage | StructureContainer | Source | undefined;
+
+    if (creep.busy) return;
+
+    if (creep.memory.sId) {
+      source = Game.getObjectById(creep.memory.sId) as StructureStorage | StructureContainer | Source;
+    }
+
+    if (!source) {
+      if (phaseController.getCurrentPhaseNumber(creep.room) >= 4) {
+        const link = structLink.findLinkForHarvester(creep);
+        if (link) {
+          if (!Memory.links[link.id].isStorageLink) {
+            // Find closest Container then source
+            source = link.pos.findClosestByPath(FIND_STRUCTURES, {
+              filter: s => s.structureType === 'container'
+            }) as StructureContainer;
+
+            if (!source || source.store.getUsedCapacity() < STORAGE_MINIMUM) {
+              source = link.pos.findClosestByPath(FIND_SOURCES) as Source;
+            }
+          } else {
+            source = link;
+          }
+        }
+      } else {
+        source = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+          filter: s => s.structureType === 'container' && s.store.getUsedCapacity() > STORAGE_MINIMUM
+        }) as StructureContainer;
+
+        if (!source) {
+          source = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE) as Source;
+        }
+      }
+    }
+    if (source) {
+      creep.memory.sId = source.id;
+      let code;
+
+      if (source instanceof Source || source instanceof Mineral) {
+        code = creep.harvest(source);
+      } else {
+        code = creep.withdraw(source, RESOURCE_ENERGY);
+      }
+
+      this.emote(creep, '🔄 harvest', code);
+
+      if (code === OK) {
+        delete creep.memory.sId;
+      } else if (code === ERR_NOT_IN_RANGE) {
+        // code = this.travelTo(creep, source, '#ffaa00', creep.memory.noRoads || opts.notBuildRoads); // orange
+        code = this.travelTo(creep, source, '#ffaa00'); // orange
+        // What about using Storage???
+      } else if (code === ERR_NOT_ENOUGH_RESOURCES) {
+        delete creep.memory.sId;
+      } else if (code === ERR_NO_BODYPART) {
+        // unable to harvest?
+        this.suicide(creep);
+      }
+    } else if (!creep.busy && this.emote(creep, '😰 No Srcs')) {
+      console.log(`${creep} at ${creep.pos} could not find any available sources`);
+    }
+    creep.busy = 1;
+    return source;
+  }
+
+  public recharge(creep: Creep): void {
     let structure:
       | StructureExtension
       | StructureSpawn
       | StructureTower
-      | StructureStorage
       | StructureContainer
+      | StructureStorage
+      | StructureLink
       | undefined;
     if (creep.memory.rechargeId) {
       structure = Game.getObjectById(creep.memory.rechargeId) as StructureExtension | StructureSpawn | StructureTower;
@@ -38,28 +109,44 @@ export class RoleHarvester extends RoleBase {
     }
 
     if (!structure) {
-      structure = creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
-        filter: s => {
-          return (
-            (s.structureType === STRUCTURE_EXTENSION || s.structureType === STRUCTURE_SPAWN) &&
-            s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-          );
+      if (phaseController.getCurrentPhaseNumber(creep.room) >= 4) {
+        const source = structLink.findLinkForHarvester(creep);
+        const link = Memory.links[(source as StructureLink).id];
+        if (link.isStorageLink) {
+          structure = creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
+            filter: s => {
+              return (
+                (s.structureType === STRUCTURE_EXTENSION || s.structureType === STRUCTURE_SPAWN) &&
+                s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+              );
+            }
+          }) as StructureExtension | StructureSpawn;
+        } else {
+          structure = source;
         }
-      }) as StructureExtension | StructureSpawn;
+      } else {
+        structure = creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
+          filter: s => {
+            return (
+              (s.structureType === STRUCTURE_EXTENSION || s.structureType === STRUCTURE_SPAWN) &&
+              s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+            );
+          }
+        }) as StructureExtension | StructureSpawn;
 
-      if (!structure) {
-        // if things do not need to be recharged, fill up storage.
-        structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-          filter: s => s.structureType === STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-        }) as StructureTower;
+        if (!structure) {
+          // if things do not need to be recharged, fill up storage.
+          structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+            filter: s => s.structureType === STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+          }) as StructureTower;
+        }
       }
-
-      if (!structure) {
-        // if things do not need to be recharged, fill up storage.
-        structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-          filter: s => s.structureType === STRUCTURE_CONTAINER && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-        }) as StructureContainer;
-      }
+      // if (!structure) {
+      //   // if things do not need to be recharged, fill up storage.
+      //   structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+      //     filter: s => s.structureType === STRUCTURE_STORAGE && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+      //   }) as StructureStorage;
+      // }
 
       if (!structure && creep.room.memory.storageId) {
         // if things do not need to be recharged, fill up storage.

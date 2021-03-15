@@ -1,7 +1,6 @@
 import { ROLES } from '../constants';
 import { RoleBase } from './base';
 import { check } from 'utils/errors';
-import { roleHarvester } from './harvester';
 
 const ROLE = ROLES.Upgrader;
 
@@ -40,7 +39,7 @@ export class RoleUpgrader extends RoleBase {
         check(creep, 'upgradeController', code);
       }
     } else {
-      roleHarvester.harvest(creep);
+      this.harvest(creep);
     }
     return true;
   }

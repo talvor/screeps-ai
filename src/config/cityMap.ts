@@ -54,6 +54,22 @@ export const cityMap: CityMap = [
       },
       tower: { pos: [{ x: 5, y: 0 }] },
       spawn: { pos: [{ x: 5, y: 5 }] }
+    },
+    additional: (room: Room): CityMapBuildings => {
+      if (room.controller) {
+        const controller = room.controller;
+        const sources = room.find(FIND_SOURCES);
+
+        const positions: IPosition[] = _.map(sources, source => {
+          const pathToController = PathFinder.search(source.pos, controller.pos);
+          const site = pathToController.path[0];
+
+          return { x: site.x, y: site.y };
+        });
+
+        return { [STRUCTURE_CONTAINER]: { pos: positions } };
+      }
+      return {};
     }
   },
   {
@@ -86,6 +102,22 @@ export const cityMap: CityMap = [
       tower: { pos: [{ x: 5, y: 0 }] },
       storage: { pos: [{ x: 10, y: 5 }] },
       spawn: { pos: [{ x: 5, y: 5 }] }
+    },
+    additional: (room: Room): CityMapBuildings => {
+      if (room.controller) {
+        const controller = room.controller;
+        const sources = room.find(FIND_SOURCES);
+
+        const positions: IPosition[] = _.map(sources, source => {
+          const pathToController = PathFinder.search(source.pos, controller.pos);
+          const site = pathToController.path[0];
+
+          return { x: site.x, y: site.y };
+        });
+
+        return { [STRUCTURE_CONTAINER]: { pos: positions } };
+      }
+      return {};
     }
   },
   {
@@ -134,6 +166,22 @@ export const cityMap: CityMap = [
       spawn: { pos: [{ x: 5, y: 5 }] },
       storage: { pos: [{ x: 10, y: 5 }] },
       link: { pos: [{ x: 11, y: 5 }] }
+    },
+    additional: (room: Room): CityMapBuildings => {
+      if (room.controller) {
+        const controller = room.controller;
+        const sources = room.find(FIND_SOURCES);
+
+        const positions: IPosition[] = _.map(sources, source => {
+          const pathToController = PathFinder.search(source.pos, controller.pos);
+          const site = pathToController.path[0];
+
+          return { x: site.x, y: site.y };
+        });
+
+        return { [STRUCTURE_CONTAINER]: { pos: positions } };
+      }
+      return {};
     }
   }
 ];

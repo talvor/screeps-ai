@@ -9,6 +9,20 @@ export class RoomController {
     if (!Memory.rooms) Memory.rooms = {};
     for (const roomName in Game.rooms) {
       this.initialize(roomName);
+      const storageId = Memory.rooms[roomName].storageId;
+
+      if (!storageId) {
+        const storage = Game.rooms[roomName].find(FIND_MY_STRUCTURES, {
+          filter: s => s.structureType === STRUCTURE_STORAGE
+        })[0];
+        if (storage) {
+          Memory.rooms[roomName].storageId = storage.id;
+        }
+      } else {
+        if (!Game.getObjectById(storageId)) {
+          delete Memory.rooms[roomName].storageId;
+        }
+      }
     }
   }
 

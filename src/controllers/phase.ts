@@ -1,5 +1,7 @@
 import { ROLES } from '../constants';
-
+import { structLink } from '../structures/link';
+import { structStorage } from '../structures/storage';
+import { structTower } from '../structures/tower';
 type RoleFields = { [key in keyof typeof ROLES]?: IRole };
 
 export interface IPhase extends RoleFields {
@@ -100,24 +102,60 @@ const PHASE_INFO: IPhase[] = [
     }
   },
   {
-    // Build defenses
+    // Build two towers & one Storage
     level: 3,
     rampartDesiredHealth: 30 * 1000,
     checkLevelPeriod: 1001,
-    spawnPeriod: 50,
-    checkGoal: (): boolean => false,
+    spawnPeriod: 100,
+    checkGoal: (room: Room): boolean => {
+      const towers = structTower.getMyStructs(room);
+      const storages = structStorage.getMyStructs(room);
+      console.log(`checkGoal towers: ${towers.length} storage: ${storages.length}`);
+      return towers.length > 1 && storages.length > 0;
+    },
     Harvester: {
-      count: 3,
+      count: 4,
       minimumEnergyToSpawn: 250,
       parts: [WORK, CARRY, MOVE, MOVE, CARRY, CARRY, MOVE, CARRY, CARRY]
     },
     Upgrader: {
-      count: 6,
+      count: 4,
       minimumEnergyToSpawn: 250,
       parts: [WORK, CARRY, MOVE, MOVE, CARRY, WORK, MOVE, WORK, CARRY]
     },
     Builder: {
       count: 4,
+      minimumEnergyToSpawn: 250,
+      parts: [WORK, CARRY, MOVE, MOVE, CARRY, WORK, MOVE, WORK, CARRY]
+    },
+    Miner: {
+      count: LOOK_SOURCES,
+      minimumEnergyToSpawn: 700,
+      parts: [WORK, WORK, WORK, WORK, WORK, MOVE, MOVE, MOVE] // 700
+    }
+  },
+  {
+    // Build defenses
+    level: 4,
+    rampartDesiredHealth: 30 * 1000,
+    checkLevelPeriod: 1001,
+    spawnPeriod: 100,
+    checkGoal: (): boolean => false,
+    Harvester: {
+      count: (spawner: StructureSpawn) => {
+        const links = structLink.getMyStructs(spawner.room);
+        return links.length;
+      },
+      minimumEnergyToSpawn: 250,
+      parts: [MOVE, WORK, CARRY, MOVE, WORK, CARRY, WORK, CARRY]
+    },
+    Upgrader: {
+      count: 4,
+      minimumEnergyToSpawn: 250,
+      parts: [WORK, CARRY, MOVE, MOVE, CARRY, WORK, MOVE, WORK, CARRY]
+    },
+    Builder: {
+      count: 2,
       minimumEnergyToSpawn: 250,
       parts: [WORK, CARRY, MOVE, MOVE, CARRY, WORK, MOVE, WORK, CARRY]
     },

@@ -16,6 +16,16 @@ export abstract class StructBase {
     this.gc();
   }
 
+  public is(struct: Structure): boolean {
+    return struct.structureType.startsWith(this.structureType);
+  }
+
+  public run(struct: Structure): void {
+    if (!this.is(struct)) return;
+
+    return;
+  }
+
   public getMyStructs(room: Room): AnyStructure[] {
     if (!this._structs[room.name]) {
       this._structs[room.name] = room.find(FIND_STRUCTURES, { filter: this.structureFilter });

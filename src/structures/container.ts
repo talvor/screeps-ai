@@ -1,5 +1,3 @@
-import { AvoidStructure } from 'utils/Avoid';
-
 import { StructBase } from './base';
 
 function findStorageAndContainers(s: Structure): boolean {

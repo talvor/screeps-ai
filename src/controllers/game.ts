@@ -2,6 +2,7 @@ import { buildController } from './build';
 import { creepController } from './creep';
 import { phaseController } from './phase';
 import { roomController } from './room';
+import { structLink } from 'structures/link';
 import { structRoad } from 'structures/road';
 import { structSpawner } from 'structures/spawner';
 import { structTower } from 'structures/tower';
@@ -31,6 +32,7 @@ export class GameController {
     buildController.preRun();
     roomController.preRun();
     structTower.preRun();
+    structLink.preRun();
   }
 
   public run(): void {
@@ -41,7 +43,11 @@ export class GameController {
       let hasSpawner = false;
       const structures = room.find(FIND_MY_STRUCTURES, {
         filter: s => {
-          return s.structureType === STRUCTURE_SPAWN || s.structureType === STRUCTURE_TOWER;
+          return (
+            s.structureType === STRUCTURE_SPAWN ||
+            s.structureType === STRUCTURE_TOWER ||
+            s.structureType === STRUCTURE_LINK
+          );
         }
       });
 
@@ -50,11 +56,12 @@ export class GameController {
       for (const s of structures) {
         if (s.structureType === STRUCTURE_SPAWN) {
           hasSpawner = true;
-          structSpawner.run(s);
         } else if (s.structureType === STRUCTURE_TOWER) {
-          structTower.run(s);
           hasTowers[roomName] = true;
         }
+        structSpawner.run(s as StructureSpawn);
+        structTower.run(s as StructureTower);
+        structLink.run(s as StructureLink);
       }
 
       if (hasSpawner && Game.time % 100 === 3) {

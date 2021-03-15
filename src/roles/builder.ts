@@ -27,7 +27,7 @@ export class RoleBuilder extends RoleBase {
 
     if (!creep.busy) {
       if (!creep.memory.full) {
-        roleHarvester.harvest(creep);
+        this.harvest(creep);
       } else {
         this.waitAtFlag(creep);
       }

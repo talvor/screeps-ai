@@ -12,9 +12,11 @@ export class StructTower extends StructBase {
   }
 
   public run(tower: StructureTower): void {
+    if (!this.is(tower)) return;
+
     const closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
-    // console.log(`${tower} - ${closestHostile}`);
     if (closestHostile) {
+      console.log(`tower.attack - ${closestHostile}`);
       if (OK === tower.attack(closestHostile)) {
         tower.busy = 1;
       }
@@ -62,6 +64,7 @@ export class StructTower extends StructBase {
       }
 
       if (structure) {
+        console.log(`tower.repair - ${structure}`);
         const code = tower.repair(structure);
         this.emote(tower, `🔧 repair ${structure.structureType} @ ${structure.pos}`, code);
         check(tower, `repair(${structure})`, code);

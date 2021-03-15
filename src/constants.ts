@@ -43,3 +43,5 @@ export const ROOM_LEVEL: IRoomLevel = {
   7: { containerRange: 1, extensionRange: 11, towerRange: 5, storageRange: 5, spawnRange: 13 },
   8: { containerRange: 1, extensionRange: 11, towerRange: 15, storageRange: 5, spawnRange: 13 }
 };
+
+export const STORAGE_MINIMUM = 100;

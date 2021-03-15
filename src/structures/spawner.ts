@@ -12,6 +12,7 @@ export class StructSpawner extends StructBase {
   }
 
   public run(spawner: StructureSpawn): void {
+    if (!this.is(spawner)) return;
     phaseController.determineCurrentPhaseNumber(spawner.room);
 
     const phase = phaseController.getCurrentPhaseInfo(spawner.room);
