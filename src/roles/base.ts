@@ -256,6 +256,7 @@ export abstract class RoleBase {
       if (!target) {
         // the thing we were building is done. Find something else to do on this tick.
         delete creep.memory.cId;
+        return;
       }
     }
     if (!target) {

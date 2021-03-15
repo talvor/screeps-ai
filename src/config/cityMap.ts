@@ -253,11 +253,12 @@ export const cityMap: CityMap = [
         _.forEach(sources, source => {
           const pathToController = PathFinder.search(source.pos, controller.pos);
           const site = pathToController.path[0];
-          const site2 = pathToController.path[2];
+          const site2 = pathToController.path[1];
 
           containerPositions.push({ x: site.x, y: site.y });
           linkPositions.push({ x: site2.x, y: site2.y });
         });
+
         return { [STRUCTURE_CONTAINER]: { pos: containerPositions }, [STRUCTURE_LINK]: { pos: linkPositions } };
       }
       return {};

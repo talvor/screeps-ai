@@ -49,7 +49,7 @@ const PHASE_INFO: IPhase[] = [
     },
     Harvester: {
       minimumEnergyToSpawn: 250,
-      count: 2,
+      count: 3,
       parts: [WORK, CARRY, MOVE, MOVE, CARRY, WORK, MOVE, WORK, CARRY]
     },
     Upgrader: {

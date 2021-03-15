@@ -3,6 +3,7 @@ import { ROLES, STORAGE_MINIMUM } from '../constants';
 import { RoleBase } from './base';
 import { phaseController } from 'controllers/phase';
 import { structLink } from 'structures/link';
+import { timeStamp } from 'console';
 
 const ROLE = ROLES.Harvester;
 
@@ -27,6 +28,15 @@ export class RoleHarvester extends RoleBase {
 
     if (creep.busy) return;
 
+    if (creep.memory.cId) {
+      if (creep.store.energy) {
+        this.build(creep);
+        return;
+      } else {
+        delete creep.memory.cId;
+      }
+    }
+
     if (creep.memory.sId) {
       source = Game.getObjectById(creep.memory.sId) as StructureStorage | StructureContainer | Source;
     }
@@ -47,6 +57,9 @@ export class RoleHarvester extends RoleBase {
           } else {
             source = link;
           }
+        }
+        if (!source) {
+          source = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE) as Source;
         }
       } else {
         source = creep.pos.findClosestByPath(FIND_STRUCTURES, {
@@ -111,8 +124,23 @@ export class RoleHarvester extends RoleBase {
     if (!structure) {
       if (phaseController.getCurrentPhaseNumber(creep.room) >= 4) {
         const source = structLink.findLinkForHarvester(creep);
-        const link = Memory.links[(source as StructureLink).id];
-        if (link.isStorageLink) {
+        if (source) {
+          const link = Memory.links[source.id];
+          if (link.isStorageLink) {
+            structure = creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
+              filter: s => {
+                return (
+                  (s.structureType === STRUCTURE_EXTENSION || s.structureType === STRUCTURE_SPAWN) &&
+                  s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+                );
+              }
+            }) as StructureExtension | StructureSpawn;
+          } else {
+            structure = source;
+          }
+        }
+
+        if (!structure) {
           structure = creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
             filter: s => {
               return (
@@ -121,8 +149,6 @@ export class RoleHarvester extends RoleBase {
               );
             }
           }) as StructureExtension | StructureSpawn;
-        } else {
-          structure = source;
         }
       } else {
         structure = creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
@@ -176,7 +202,9 @@ export class RoleHarvester extends RoleBase {
         delete creep.memory.rechargeId;
         this.harvest(creep);
       } else {
-        this.waitAtFlag(creep);
+        if (!this.build(creep)) {
+          this.waitAtFlag(creep);
+        }
       }
     }
   }
