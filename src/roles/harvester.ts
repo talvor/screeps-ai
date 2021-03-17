@@ -1,9 +1,6 @@
 import { ROLES, STORAGE_MINIMUM } from '../constants';
 
 import { RoleBase } from './base';
-import { phaseController } from 'controllers/phase';
-import { structLink } from 'structures/link';
-import { timeStamp } from 'console';
 
 const ROLE = ROLES.Harvester;
 
@@ -16,22 +13,30 @@ export class RoleHarvester extends RoleBase {
     if (creep.busy || !this.is(creep)) return false;
 
     if (!creep.memory.full) {
-      this.harvest(creep);
+      return this.harvest(creep);
     } else {
-      this.recharge(creep);
+      if (this.recharge(creep)) {
+        return true;
+      } else if (this.build(creep)) {
+        return true;
+      } else if (this.upgrade(creep)) {
+        return true;
+      } else {
+        this.waitAtFlag(creep);
+      }
     }
-    return true;
+
+    return false;
   }
 
-  public harvest(creep: Creep): StructureLink | StructureStorage | StructureContainer | Source | undefined {
+  public harvest(creep: Creep): boolean {
     let source: StructureLink | StructureStorage | StructureContainer | Source | undefined;
 
-    if (creep.busy) return;
+    if (creep.busy) return true;
 
     if (creep.memory.cId) {
       if (creep.store.energy) {
-        this.build(creep);
-        return;
+        return this.build(creep);
       } else {
         delete creep.memory.cId;
       }
@@ -42,33 +47,12 @@ export class RoleHarvester extends RoleBase {
     }
 
     if (!source) {
-      if (phaseController.getCurrentPhaseNumber(creep.room) >= 4) {
-        const link = structLink.findLinkForHarvester(creep);
-        if (link) {
-          if (!Memory.links[link.id].isStorageLink) {
-            // Find closest Container then source
-            source = link.pos.findClosestByPath(FIND_STRUCTURES, {
-              filter: s => s.structureType === 'container'
-            }) as StructureContainer;
+      source = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+        filter: s => s.structureType === 'container' && s.store.getUsedCapacity() > STORAGE_MINIMUM
+      }) as StructureContainer;
 
-            if (!source || source.store.getUsedCapacity() < STORAGE_MINIMUM) {
-              source = link.pos.findClosestByPath(FIND_SOURCES) as Source;
-            }
-          } else {
-            source = link;
-          }
-        }
-        if (!source) {
-          source = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE) as Source;
-        }
-      } else {
-        source = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-          filter: s => s.structureType === 'container' && s.store.getUsedCapacity() > STORAGE_MINIMUM
-        }) as StructureContainer;
-
-        if (!source) {
-          source = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE) as Source;
-        }
+      if (!source) {
+        source = creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE) as Source;
       }
     }
     if (source) {
@@ -85,9 +69,13 @@ export class RoleHarvester extends RoleBase {
 
       if (code === OK) {
         delete creep.memory.sId;
+        creep.busy = 1;
+        return true;
       } else if (code === ERR_NOT_IN_RANGE) {
         // code = this.travelTo(creep, source, '#ffaa00', creep.memory.noRoads || opts.notBuildRoads); // orange
         code = this.travelTo(creep, source, '#ffaa00'); // orange
+        creep.busy = 1;
+        return true;
         // What about using Storage???
       } else if (code === ERR_NOT_ENOUGH_RESOURCES) {
         delete creep.memory.sId;
@@ -98,11 +86,10 @@ export class RoleHarvester extends RoleBase {
     } else if (!creep.busy && this.emote(creep, '😰 No Srcs')) {
       console.log(`${creep} at ${creep.pos} could not find any available sources`);
     }
-    creep.busy = 1;
-    return source;
+    return false;
   }
 
-  public recharge(creep: Creep): void {
+  public recharge(creep: Creep): boolean {
     let structure:
       | StructureExtension
       | StructureSpawn
@@ -122,57 +109,21 @@ export class RoleHarvester extends RoleBase {
     }
 
     if (!structure) {
-      if (phaseController.getCurrentPhaseNumber(creep.room) >= 4) {
-        const source = structLink.findLinkForHarvester(creep);
-        if (source) {
-          const link = Memory.links[source.id];
-          if (link.isStorageLink) {
-            structure = creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
-              filter: s => {
-                return (
-                  (s.structureType === STRUCTURE_EXTENSION || s.structureType === STRUCTURE_SPAWN) &&
-                  s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-                );
-              }
-            }) as StructureExtension | StructureSpawn;
-          } else {
-            structure = source;
-          }
+      structure = creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
+        filter: s => {
+          return (
+            (s.structureType === STRUCTURE_EXTENSION || s.structureType === STRUCTURE_SPAWN) &&
+            s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+          );
         }
+      }) as StructureExtension | StructureSpawn;
 
-        if (!structure) {
-          structure = creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
-            filter: s => {
-              return (
-                (s.structureType === STRUCTURE_EXTENSION || s.structureType === STRUCTURE_SPAWN) &&
-                s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-              );
-            }
-          }) as StructureExtension | StructureSpawn;
-        }
-      } else {
-        structure = creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
-          filter: s => {
-            return (
-              (s.structureType === STRUCTURE_EXTENSION || s.structureType === STRUCTURE_SPAWN) &&
-              s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-            );
-          }
-        }) as StructureExtension | StructureSpawn;
-
-        if (!structure) {
-          // if things do not need to be recharged, fill up storage.
-          structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-            filter: s => s.structureType === STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-          }) as StructureTower;
-        }
+      if (!structure) {
+        // if things do not need to be recharged, fill up storage.
+        structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {
+          filter: s => s.structureType === STRUCTURE_TOWER && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+        }) as StructureTower;
       }
-      // if (!structure) {
-      //   // if things do not need to be recharged, fill up storage.
-      //   structure = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-      //     filter: s => s.structureType === STRUCTURE_STORAGE && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-      //   }) as StructureStorage;
-      // }
 
       if (!structure && creep.room.memory.storageId) {
         // if things do not need to be recharged, fill up storage.
@@ -188,25 +139,19 @@ export class RoleHarvester extends RoleBase {
 
       if (code === OK) {
         creep.busy = 1;
+        return true;
+      } else if (code === ERR_NOT_IN_RANGE) {
+        this.travelTo(creep, structure.pos, '#00FF3C'); // green
+        creep.busy = 1;
+        return true;
       } else if (code === ERR_NO_BODYPART) {
         // unable to energize?
         this.suicide(creep);
-      } else if (code === ERR_NOT_IN_RANGE) {
-        this.travelTo(creep, structure.pos, '#00FF3C'); // green
       } else if (code === ERR_FULL) {
         delete creep.memory.rechargeId;
       }
-    } else {
-      if (creep.store.getFreeCapacity() > 0) {
-        delete creep.memory.full;
-        delete creep.memory.rechargeId;
-        this.harvest(creep);
-      } else {
-        if (!this.build(creep)) {
-          this.waitAtFlag(creep);
-        }
-      }
     }
+    return false;
   }
 }
 

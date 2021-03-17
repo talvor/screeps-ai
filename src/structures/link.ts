@@ -14,25 +14,31 @@ export class StructLink extends StructBase {
     if (!Memory.links[link.id]) {
       if (this.isCloseToStorage(link)) {
         Memory.links[link.id] = {
-          isStorageLink: true
+          isStorageLink: true,
+          sourceId: link.id,
+          targetId: link.room.memory.storageId as string,
+          roomName: link.room.name
         };
       } else {
-        const target = this.findStorageLink(link.room);
-        if (target) {
-          Memory.links[link.id] = {
-            targetId: target.id
-          };
-        }
+        Memory.links[link.id] = {
+          isStorageLink: false,
+          sourceId: this.findSource(link).id,
+          targetId: link.id,
+          roomName: link.room.name
+        };
       }
     }
 
-    const targetLink = this.getTargetLink(link);
-    if (
-      targetLink &&
-      targetLink.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
-      link.store.getFreeCapacity(RESOURCE_ENERGY) === 0
-    ) {
-      link.transferEnergy(targetLink);
+    const linkMetaData = Memory.links[link.id];
+    if (!linkMetaData.isStorageLink) {
+      const targetLink = this.getStorageLink(link.room);
+      if (
+        targetLink &&
+        targetLink.store.getFreeCapacity(RESOURCE_ENERGY) > 0 &&
+        link.store.getFreeCapacity(RESOURCE_ENERGY) === 0
+      ) {
+        link.transferEnergy(targetLink);
+      }
     }
   }
 
@@ -43,42 +49,34 @@ export class StructLink extends StructBase {
     return link.pos.inRangeTo((storage as StructureStorage).pos, range);
   }
 
-  private findStorageLink(room: Room): StructureLink | undefined {
-    let struct;
-    const links = this.getMyStructs(room);
-    _.forEach(links, link => {
-      if (Memory.links[link.id].isStorageLink) {
-        struct = link;
-        return false;
+  private findSource(link: StructureLink): StructureContainer {
+    return link.pos.findClosestByRange(FIND_STRUCTURES, {
+      filter: x => {
+        return x.structureType === STRUCTURE_CONTAINER;
       }
-      return true;
-    });
-
-    return struct;
+    }) as StructureContainer;
   }
 
-  private getTargetLink(link: StructureLink): StructureLink | undefined {
-    const targetId = Memory.links[link.id].targetId;
-    if (targetId) {
-      return Game.getObjectById(targetId) as StructureLink;
-    }
-    return undefined;
+  private getStorageLink(room: Room): StructureLink | undefined {
+    const link = _.find(Memory.links, l => l.roomName === room.name && l.isStorageLink);
+
+    return link && link.sourceId ? (Game.getObjectById(link.sourceId) as StructureLink) : undefined;
   }
 
-  public removeHarvester(creep: Creep): void {
+  public removeTransferrer(creep: Creep): void {
     _.forEach(Memory.links, link => {
-      if (link.harvesterId === creep.id) {
-        delete link.harvesterId;
+      if (link.transferrerId === creep.id) {
+        delete link.transferrerId;
         return false;
       }
       return true;
     });
   }
 
-  public findLinkForHarvester(creep: Creep): StructureLink | undefined {
+  public findLinkForTransferrer(creep: Creep): StructureLink | undefined {
     let linkId;
     _.forEach(Memory.links, (link, id) => {
-      if (link.harvesterId === creep.id) {
+      if (link.transferrerId === creep.id) {
         linkId = id;
         return false;
       }
@@ -88,8 +86,8 @@ export class StructLink extends StructBase {
     if (!linkId) {
       // Find unassigned Link
       _.forEach(Memory.links, (link, id) => {
-        if (!link.harvesterId || !Game.getObjectById(link.harvesterId)) {
-          link.harvesterId = creep.id;
+        if (!link.transferrerId || !Game.getObjectById(link.transferrerId)) {
+          link.transferrerId = creep.id;
           linkId = id;
           return false;
         }

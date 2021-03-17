@@ -3,6 +3,7 @@ import { buildController } from 'controllers/build';
 import { getCityMapForRCL } from 'config/cityMap';
 
 const _lowHealthStructs: { [key: string]: AnyStructure[] } = {};
+const _lowHealthCreeps: { [key: string]: Creep[] } = {};
 
 export class RoomController {
   public preRun(): void {
@@ -27,7 +28,7 @@ export class RoomController {
   }
 
   public initialize(roomName: string): void {
-    if (!Memory.rooms[roomName].setup) {
+    if (!Memory.rooms[roomName] || !Memory.rooms[roomName].setup) {
       console.log(`Initializing ${roomName}`);
       const roomData = this.getInitialData(roomName);
       Memory.rooms[roomName] = roomData;
@@ -68,7 +69,7 @@ export class RoomController {
   public findLowHealthStructures(
     room: Room | RoomPosition | string,
     structureThreshold: number,
-    roadThreshold = 0.2
+    roadThreshold = 0.5
   ): AnyStructure | undefined {
     // accept Room Object, RoomPosition Object, String
     const roomName = (room as Room).name || (room as RoomPosition).roomName || (room as string);
@@ -104,6 +105,30 @@ export class RoomController {
       (a, b) => this.healthRatio(a.hits, b.hitsMax) - this.healthRatio(b.hits, b.hitsMax)
     );
     return _lowHealthStructs[roomName].pop();
+  }
+
+  public findLowHealthCreeps(room: Room | RoomPosition | string, healthThreshold = 0.5): Creep | undefined {
+    // accept Room Object, RoomPosition Object, String
+    const roomName = (room as Room).name || (room as RoomPosition).roomName || (room as string);
+    room = Game.rooms[roomName];
+
+    if (!_lowHealthCreeps[roomName] || _lowHealthCreeps[roomName].length === 0) {
+      const lowHealthCreeps = room.find(FIND_CREEPS, {
+        filter: (c: Creep) => {
+          if (!c.hits || !c.hitsMax) return false;
+
+          const healthRatio = this.healthRatio(c.hits, c.hitsMax);
+          return healthRatio < healthThreshold;
+        }
+      });
+      _lowHealthCreeps[roomName] = lowHealthCreeps;
+    }
+
+    if (!_lowHealthCreeps[roomName] || _lowHealthCreeps[roomName].length === 0) return;
+    _lowHealthCreeps[roomName].sort(
+      (a, b) => this.healthRatio(a.hits, b.hitsMax) - this.healthRatio(b.hits, b.hitsMax)
+    );
+    return _lowHealthCreeps[roomName].pop();
   }
 
   public checkCityMap(room: Room): void {

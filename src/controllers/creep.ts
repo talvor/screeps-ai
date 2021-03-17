@@ -1,6 +1,8 @@
 import { roleBuilder } from 'roles/builder';
 import { roleHarvester } from 'roles/harvester';
 import { roleMiner } from 'roles/miner';
+import { roleSettler } from 'roles/settler';
+import { roleTransferrer } from 'roles/transferrer';
 import { roleUpgrader } from 'roles/upgrader';
 import { structLink } from 'structures/link';
 
@@ -18,6 +20,8 @@ class CreepController {
     roleBuilder.run(creep, hasTowers);
     roleUpgrader.run(creep);
     roleMiner.run(creep);
+    roleSettler.run(creep);
+    roleTransferrer.run(creep);
   }
 
   private preRun(creep: Creep): boolean {
@@ -29,7 +33,7 @@ class CreepController {
       }
       // TODO Inform a Spawner to replace the creep.
       delete Memory.creeps[creep.name];
-      structLink.removeHarvester(creep);
+      structLink.removeTransferrer(creep);
       return false;
     }
 

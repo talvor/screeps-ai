@@ -182,14 +182,19 @@ export const cityMap: CityMap = [
         const sources = room.find(FIND_SOURCES);
 
         const containerPositions: IPosition[] = [];
+        const linkPositions: IPosition[] = [];
 
-        _.forEach(sources, source => {
+        _.forEach(sources, (source, index) => {
           const pathToController = PathFinder.search(source.pos, controller.pos);
           const site = pathToController.path[0];
+          const site2 = pathToController.path[1];
 
           containerPositions.push({ x: site.x, y: site.y });
+          if (index === 0) {
+            linkPositions.push({ x: site2.x, y: site2.y });
+          }
         });
-        return { [STRUCTURE_CONTAINER]: { pos: containerPositions } };
+        return { [STRUCTURE_CONTAINER]: { pos: containerPositions }, [STRUCTURE_LINK]: { pos: linkPositions } };
       }
       return {};
     }

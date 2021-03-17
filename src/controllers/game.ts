@@ -1,3 +1,4 @@
+import { ROLES } from '../constants';
 import { buildController } from './build';
 import { creepController } from './creep';
 import { phaseController } from './phase';
@@ -72,8 +73,13 @@ export class GameController {
       // Claimed a new room, build a spawner
       if (!hasSpawner && room.controller?.my) {
         const sites = structSpawner.getMySites(room);
-        if (sites.length === 0) {
+        const constructionSites = structSpawner.getMyStructs(room);
+        if (sites.length === 0 && constructionSites.length === 0) {
           console.log(`${room.name} building first spawner`);
+          const claimFlag = Game.flags.ClaimController;
+          if (claimFlag && claimFlag.room && claimFlag.room.name === room.name) {
+            claimFlag.room?.createConstructionSite(claimFlag.pos.x, claimFlag.pos.y, STRUCTURE_SPAWN);
+          }
         }
       }
     }
@@ -91,6 +97,13 @@ export class GameController {
 
     structRoad.gc();
     buildController.gc();
+  }
+
+  public findCreepsWithRole(role: ROLES, room?: Room): Creep[] {
+    return _.filter(Game.creeps, creep => {
+      if (room && creep.room.name !== room.name) return false;
+      return creep.name.startsWith(role);
+    });
   }
 }
 

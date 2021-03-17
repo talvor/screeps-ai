@@ -2,7 +2,9 @@ export enum ROLES {
   Harvester = 'Harvester',
   Upgrader = 'Upgrader',
   Builder = 'Builder',
-  Miner = 'Miner'
+  Miner = 'Miner',
+  Settler = 'Settler',
+  Transferrer = 'Transferrer'
 }
 
 export const EXIT_NAME = {

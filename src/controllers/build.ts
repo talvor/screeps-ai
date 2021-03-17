@@ -179,6 +179,8 @@ export class BuildController {
           // unable to fullfill order, but can in the future, reschedule
           orders.unshift({ type, pos: serializePosition(roomPos) });
           if (code === ERR_FULL) break;
+        } else {
+          console.log(`buildController.execute code=${code}`);
         }
       } else {
         console.log(`${roomPos} Abandoning planned ${type}. Room is not visible.`);

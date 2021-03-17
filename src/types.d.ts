@@ -16,6 +16,7 @@ interface CreepMemory {
   pos?: string;
   recycle?: string | number;
   renew?: string | number;
+  settlerInRoom?: boolean;
 }
 
 interface Memory {
@@ -24,8 +25,11 @@ interface Memory {
   gcl: number;
   roads: Record<string, number[]>;
   con: Record<string, IBuildOrder[]>;
-  towers: Record<string, { repairId?: string; _say?: string }>;
-  links: Record<string, { targetId?: string; isStorageLink?: boolean; harvesterId?: string }>;
+  towers: Record<string, { repairId?: string; _say?: string; healId?: string }>;
+  links: Record<
+    string,
+    { sourceId: string; targetId: string; isStorageLink: boolean; roomName: string; transferrerId?: string }
+  >;
   buildOrderCount: number;
 }
 
@@ -82,7 +86,7 @@ interface BuildOrder {
 
 interface IRole {
   count: number | string | ((spawner: StructureSpawn) => number);
-  parts: BodyPartConstant[];
+  parts: BodyPartConstant[] | (() => BodyPartConstant[]);
   minimumEnergyToSpawn?: number;
   shardwide?: boolean;
 }

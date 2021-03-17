@@ -3,6 +3,8 @@ import { phaseController } from 'controllers/phase';
 import { roleBuilder } from 'roles/builder';
 import { roleHarvester } from 'roles/harvester';
 import { roleMiner } from 'roles/miner';
+import { roleSettler } from 'roles/settler';
+import { roleTransferrer } from 'roles/transferrer';
 import { roleUpgrader } from 'roles/upgrader';
 import { structRoad } from './road';
 
@@ -47,16 +49,16 @@ export class StructSpawner extends StructBase {
 
       if (roleHarvester.shouldSpawn(spawner)) {
         roleHarvester.spawn(spawner);
+      } else if (roleSettler.shouldSpawn(spawner)) {
+        roleSettler.spawn(spawner);
       } else if (roleMiner.shouldSpawn(spawner)) {
         roleMiner.spawn(spawner);
       } else if (roleUpgrader.shouldSpawn(spawner)) {
         roleUpgrader.spawn(spawner);
       } else if (roleBuilder.shouldSpawn(spawner)) {
         roleBuilder.spawn(spawner);
-        // } else if (roleRemoteBuilder.shouldSpawn(spawner)) {
-        //   roleRemoteBuilder.spawn(spawner);
-        // } else if (roleSettler.shouldSpawn(spawner)) {
-        //   roleSettler.spawn(spawner);
+      } else if (roleTransferrer.shouldSpawn(spawner)) {
+        roleTransferrer.spawn(spawner);
       }
     }
 

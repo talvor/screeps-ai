@@ -44,7 +44,7 @@ export const check = (obj: Creep | Structure | RoomPosition, action: string, cod
       // @ts-ignore
       const pos = obj.pos || '';
       // @ts-ignore
-      console.log(`${obj} ${pos} could not perform ${action}: ${errMsg}`);
+      // console.log(`${obj} ${pos} could not perform ${action}: ${errMsg}`);
     }
     return true;
   }

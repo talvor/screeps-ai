@@ -2,7 +2,7 @@ import { StructBase } from './base';
 
 export class StructStorage extends StructBase {
   public constructor() {
-    super(STRUCTURE_CONTAINER);
+    super(STRUCTURE_STORAGE);
   }
 }
 

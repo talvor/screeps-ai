@@ -2,6 +2,7 @@ import { ROLES } from '../constants';
 import { structLink } from '../structures/link';
 import { structStorage } from '../structures/storage';
 import { structTower } from '../structures/tower';
+
 type RoleFields = { [key in keyof typeof ROLES]?: IRole };
 
 export interface IPhase extends RoleFields {
@@ -17,7 +18,7 @@ const PHASE_INFO: IPhase[] = [
     level: 0,
     checkLevelPeriod: 1001,
     spawnPeriod: 25,
-    checkGoal: (): boolean => true
+    checkGoal: (room: Room): boolean => true
   },
   {
     // Intro level.
@@ -25,6 +26,7 @@ const PHASE_INFO: IPhase[] = [
     checkLevelPeriod: 1001,
     spawnPeriod: 25,
     checkGoal: (room: Room): boolean => {
+      console.log(`Checking goal for room:${room.name} phase:1`);
       // Goal: build a container for each source and 5 extensions.
       let desiredExtensionCount = 5;
       let desiredContainerCount = (room.find(FIND_SOURCES) || {}).length || 0;
@@ -69,6 +71,7 @@ const PHASE_INFO: IPhase[] = [
     checkLevelPeriod: 1001,
     spawnPeriod: 50,
     checkGoal: (room: Room): boolean => {
+      console.log(`Checking goal for room:${room.name} phase:2`);
       // Goal: Build one tower.
       const structures = room.find(FIND_MY_STRUCTURES);
 
@@ -108,30 +111,47 @@ const PHASE_INFO: IPhase[] = [
     checkLevelPeriod: 1001,
     spawnPeriod: 100,
     checkGoal: (room: Room): boolean => {
+      console.log(`Checking goal for room:${room.name} phase:3`);
       const towers = structTower.getMyStructs(room);
       const storages = structStorage.getMyStructs(room);
-      console.log(`checkGoal towers: ${towers.length} storage: ${storages.length}`);
+      console.log(`checkGoal towers: ${towers.length}/2 storage: ${storages.length}/1`);
       return towers.length > 1 && storages.length > 0;
     },
     Harvester: {
-      count: 4,
+      count: 3,
       minimumEnergyToSpawn: 250,
       parts: [WORK, CARRY, MOVE, MOVE, CARRY, CARRY, MOVE, CARRY, CARRY]
     },
     Upgrader: {
-      count: 4,
+      count: 3,
       minimumEnergyToSpawn: 250,
       parts: [WORK, CARRY, MOVE, MOVE, CARRY, WORK, MOVE, WORK, CARRY]
     },
     Builder: {
-      count: 4,
+      count: 3,
       minimumEnergyToSpawn: 250,
       parts: [WORK, CARRY, MOVE, MOVE, CARRY, WORK, MOVE, WORK, CARRY]
     },
     Miner: {
       count: LOOK_SOURCES,
       minimumEnergyToSpawn: 700,
-      parts: [WORK, WORK, WORK, WORK, WORK, MOVE, MOVE, MOVE] // 700
+      parts: [MOVE, WORK, WORK, WORK, WORK, WORK, WORK, WORK] // 700
+    },
+    Settler: {
+      count: (spawner: StructureSpawn) => {
+        const claimFlag = Game.flags.ClaimController;
+        return claimFlag ? 3 : 0;
+      },
+      minimumEnergyToSpawn: 800,
+      parts: () => {
+        const claimFlag = Game.flags.ClaimController;
+        const roomController = claimFlag.room?.controller;
+
+        return roomController?.my
+          ? [WORK, CARRY, MOVE, MOVE, CARRY, CARRY, MOVE, CARRY, CARRY, WORK]
+          : [CLAIM, WORK, CARRY, MOVE];
+      },
+      shardwide: true
     }
   },
   {
@@ -140,14 +160,14 @@ const PHASE_INFO: IPhase[] = [
     rampartDesiredHealth: 30 * 1000,
     checkLevelPeriod: 1001,
     spawnPeriod: 100,
-    checkGoal: (): boolean => false,
+    checkGoal: (room): boolean => {
+      console.log(`Checking goal for room:${room.name} phase:4`);
+      return false;
+    },
     Harvester: {
-      count: (spawner: StructureSpawn) => {
-        const links = structLink.getMyStructs(spawner.room);
-        return links.length;
-      },
+      count: 2,
       minimumEnergyToSpawn: 250,
-      parts: [MOVE, WORK, CARRY, MOVE, WORK, CARRY, WORK, CARRY]
+      parts: [MOVE, WORK, CARRY, MOVE, CARRY, CARRY, MOVE, CARRY]
     },
     Upgrader: {
       count: 4,
@@ -162,7 +182,31 @@ const PHASE_INFO: IPhase[] = [
     Miner: {
       count: LOOK_SOURCES,
       minimumEnergyToSpawn: 700,
-      parts: [WORK, WORK, WORK, WORK, WORK, MOVE, MOVE, MOVE] // 700
+      parts: [MOVE, WORK, WORK, WORK, WORK, WORK, WORK, WORK] // 700
+    },
+    Settler: {
+      count: (spawner: StructureSpawn) => {
+        const claimFlag = Game.flags.ClaimController;
+        return claimFlag ? 3 : 0;
+      },
+      minimumEnergyToSpawn: 800,
+      parts: () => {
+        const claimFlag = Game.flags.ClaimController;
+        const roomController = claimFlag.room?.controller;
+
+        return roomController?.my
+          ? [WORK, CARRY, MOVE, MOVE, CARRY, CARRY, MOVE, CARRY, CARRY, WORK]
+          : [CLAIM, WORK, CARRY, MOVE];
+      },
+      shardwide: true
+    },
+    Transferrer: {
+      count: (spawner: StructureSpawn) => {
+        const links = structLink.getMyStructs(spawner.room);
+        return links.length;
+      },
+      minimumEnergyToSpawn: 250,
+      parts: [MOVE, WORK, CARRY, MOVE, CARRY, CARRY, MOVE, CARRY]
     }
   }
 ];

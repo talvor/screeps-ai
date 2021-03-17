@@ -5,7 +5,7 @@ import { phaseController } from 'controllers/phase';
 import { structRoad } from 'structures/road';
 
 export abstract class RoleBase {
-  private roleName: ROLES;
+  public roleName: ROLES;
 
   public constructor(role: ROLES) {
     this.roleName = role;
@@ -114,10 +114,10 @@ export abstract class RoleBase {
     return true;
   }
 
-  public harvest(creep: Creep): AnyStructure | Source | undefined {
+  public harvest(creep: Creep): boolean {
     let source: StructureStorage | StructureContainer | Source | undefined;
 
-    if (creep.busy) return;
+    if (creep.busy) return true;
 
     if (creep.memory.sId) {
       source = Game.getObjectById(creep.memory.sId) as StructureStorage | StructureContainer | Source;
@@ -125,7 +125,7 @@ export abstract class RoleBase {
 
     if (!source) {
       if (this.pickupFallenResource(creep)) {
-        return;
+        return true;
       } else {
         source = creep.pos.findClosestByPath(FIND_STRUCTURES, {
           filter: s => {
@@ -155,9 +155,14 @@ export abstract class RoleBase {
 
       if (code === OK) {
         delete creep.memory.sId;
+        creep.busy = 1;
+        return true;
       } else if (code === ERR_NOT_IN_RANGE) {
         // code = this.travelTo(creep, source, '#ffaa00', creep.memory.noRoads || opts.notBuildRoads); // orange
         code = this.travelTo(creep, source, '#ffaa00'); // orange
+        creep.busy = 1;
+        return true;
+
         // What about using Storage???
       } else if (code === ERR_NOT_ENOUGH_RESOURCES) {
         delete creep.memory.sId;
@@ -168,14 +173,16 @@ export abstract class RoleBase {
     } else if (!creep.busy && this.emote(creep, '😰 No Srcs')) {
       console.log(`${creep} at ${creep.pos} could not find any available sources`);
     }
-    creep.busy = 1;
-    return source;
+    return false;
   }
 
   public shouldSpawn(spawner: StructureSpawn): boolean {
     const roomName = spawner.room.name;
     const phase = phaseController.getCurrentPhaseInfo(spawner.room);
     const phaseRole = phase[this.roleName] as IRole;
+    if (!phaseRole) {
+      return false;
+    }
     const creeps = _.filter(
       Game.creeps,
       creep => (roomName === creep.room.name || phaseRole.shardwide) && this.is(creep)
@@ -215,7 +222,13 @@ export abstract class RoleBase {
   public spawn(spawner: StructureSpawn): number {
     const phase = phaseController.getCurrentPhaseInfo(spawner.room);
     const phaseRole = phase[this.roleName] as IRole;
-    const availableBodyParts = phaseRole.parts;
+    let availableBodyParts;
+    if (typeof phaseRole.parts === 'function') {
+      availableBodyParts = phaseRole.parts();
+    } else {
+      availableBodyParts = phaseRole.parts;
+    }
+
     const bodyParts: BodyPartConstant[] = [];
     const action = 'spawnCreep';
     let cost = 0;
@@ -234,7 +247,11 @@ export abstract class RoleBase {
     }
 
     const label = `${this.roleName}${Game.time}`;
-    console.log(`Spawning ${label} ` + JSON.stringify(bodyParts) + ` cost ${cost}/${spawner.room.energyAvailable}`);
+    console.log(
+      `${spawner.room.name} Spawning ${label} ` +
+        JSON.stringify(bodyParts) +
+        ` cost ${cost}/${spawner.room.energyAvailable}`
+    );
     const code = spawner[action](bodyParts, label);
 
     check(spawner, action, code);
@@ -247,7 +264,7 @@ export abstract class RoleBase {
     }, 0);
   }
 
-  public build(creep: Creep): boolean | undefined {
+  public build(creep: Creep): boolean {
     const targetId = creep.memory.cId;
     let target: Structure | ConstructionSite | null = null;
 
@@ -256,12 +273,11 @@ export abstract class RoleBase {
       if (!target) {
         // the thing we were building is done. Find something else to do on this tick.
         delete creep.memory.cId;
-        return;
+        return false;
       }
     }
     if (!target) {
       target = creep.pos.findClosestByPath(FIND_MY_CONSTRUCTION_SITES) as ConstructionSite;
-      // target = creep.room.find(FIND_CONSTRUCTION_SITES)[0];
     }
 
     if (target) {
@@ -271,8 +287,10 @@ export abstract class RoleBase {
       this.emote(creep, '🚧 build', code);
       if (code === OK) {
         creep.busy = 1;
+        return true;
       } else if (code === ERR_NOT_IN_RANGE) {
         this.travelTo(creep, target.pos, '#ffe56d');
+        return true;
       } else if (code === ERR_INVALID_TARGET) {
         delete creep.memory.cId;
       } else if (code === ERR_NO_BODYPART) {
@@ -282,7 +300,7 @@ export abstract class RoleBase {
     } else if (targetId) {
       delete creep.memory.cId;
     }
-    return true;
+    return false;
   }
 
   public waitAtFlag(creep: Creep): void {
@@ -291,5 +309,37 @@ export abstract class RoleBase {
       this.emote(creep, '🚏 waiting');
       this.travelTo(creep, flag.pos, '#00FF3C'); // green
     }
+  }
+
+  public upgrade(creep: Creep): boolean {
+    let controller = creep.room.controller;
+    if (controller && creep.memory.origin && controller.room.name !== creep.memory.origin) {
+      controller = Game.rooms[creep.memory.origin].controller;
+    }
+    if (!controller) {
+      console.log(`${creep.name} cannot find its controller. Assigned to ${creep.memory.origin}.`);
+      return false;
+    }
+    if (!controller.my) {
+      console.log(`${creep.name} attempting to upgrade at a controller not owned by us!`);
+      return false;
+    }
+    const code = creep.upgradeController(controller);
+    this.emote(creep, '⚡ upgrade');
+    if (code === OK) {
+      creep.busy = 1;
+      return true;
+    } else if (code === ERR_NOT_IN_RANGE) {
+      this.travelTo(creep, controller.pos, '#4800FF'); // blue
+      return true;
+    } else if (code === ERR_NOT_OWNER) {
+      console.log(`${creep.name} is lost in ${creep.room.name}`);
+    } else if (code === ERR_NO_BODYPART) {
+      // unable to upgrade?
+      this.suicide(creep);
+    } else {
+      check(creep, 'upgradeController', code);
+    }
+    return false;
   }
 }
