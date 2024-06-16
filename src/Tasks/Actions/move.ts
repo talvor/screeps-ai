@@ -1,4 +1,5 @@
 import { BaseTaskAction, TaskAction, TaskActionType } from "Tasks/task";
+import { moveTo } from "screeps-cartographer";
 import { packPos, unpackPos } from "utils/position";
 
 class MoveAction extends BaseTaskAction<RoomPosition, number> {
@@ -8,12 +9,13 @@ class MoveAction extends BaseTaskAction<RoomPosition, number> {
     const { target, distance } = this.decodeTA(ta);
     const opts: MoveToOpts = {};
     opts.visualizePathStyle = { stroke: "#ffaa00", opacity: 1, lineStyle: "dotted" };
-    let result = creep.moveTo(target, opts);
+    // let result = creep.moveTo(target, opts);
+    const result = moveTo(creep, target, opts);
     if (
       result === ERR_NO_PATH ||
       result === ERR_NOT_OWNER ||
-      result === ERR_NO_BODYPART ||
-      result === ERR_INVALID_TARGET
+      result === ERR_NO_BODYPART // ||
+      // result === ERR_INVALID_TARGET
     )
       return true; // Unrecoverable error
     return creep.pos.inRangeTo(target, distance);

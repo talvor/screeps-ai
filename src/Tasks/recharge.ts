@@ -1,5 +1,5 @@
 import { transferAction } from "Tasks/Actions/transfer";
-import { TaskActionType, TaskRequest } from "Tasks/task";
+import { TaskAction, TaskActionType, TaskRequest } from "Tasks/task";
 
 export const makeRechargeTask = (target: StructureSpawn): TaskRequest => ({
   name: `Recharge: ${target.name}`,

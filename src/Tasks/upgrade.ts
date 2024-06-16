@@ -1,4 +1,4 @@
-import { TaskActionType, TaskRequest } from "Tasks/task";
+import { TaskAction, TaskActionType, TaskRequest } from "Tasks/task";
 import { upgradeAction } from "./Actions/upgrade";
 
 export const makeUpgradeTask = (target: StructureController, idx: number): TaskRequest => ({

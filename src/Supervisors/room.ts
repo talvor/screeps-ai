@@ -3,6 +3,8 @@ import { makeUpgradeTask } from "Tasks/upgrade";
 import { taskSupervisor } from "./task";
 import { findSpawnsToRecharge } from "Selectors/spawns";
 import { findCreepsInRoom } from "Selectors/creeps";
+import { findConstructionSitesInRoom } from "Selectors/structure";
+import { makeBuildTask } from "Tasks/build";
 
 class RoomSupervisor {
   runRoom() {
@@ -14,6 +16,11 @@ class RoomSupervisor {
         findCreepsInRoom(room.name).forEach((_, index) =>
           taskSupervisor.requestNewTask(makeUpgradeTask(controller, index))
         );
+
+        // Create a build task for each construction site in the room
+        findConstructionSitesInRoom(room).forEach(cs => {
+          taskSupervisor.requestNewTask(makeBuildTask(cs, cs.id));
+        });
       }
     }
 

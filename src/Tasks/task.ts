@@ -55,6 +55,9 @@ export abstract class BaseTaskAction<Target, Params> {
   make(_target: Target, _params?: Params): TaskAction {
     throw new Error(`TaskAction ${this.type} must implement "make"`);
   }
+  isRepeatableComplete(_creep: Creep, _ta: TaskAction): boolean {
+    return true;
+  }
 }
 
 export abstract class BaseTaskPrerequisite<Target, Params> {

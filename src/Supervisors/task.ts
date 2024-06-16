@@ -1,3 +1,4 @@
+import { buildAction } from "Tasks/Actions/build";
 import { harvestAction } from "Tasks/Actions/harvest";
 import { moveAction } from "Tasks/Actions/move";
 import { transferAction } from "Tasks/Actions/transfer";
@@ -62,6 +63,8 @@ class TaskSupervisor {
         tr.status = "COMPLETE";
         continue;
       }
+      const taskHandler = getTaskActionHander(task.action);
+
       if (task.actionStack.length > 0 && creep) {
         const action = task.actionStack.shift();
         if (action) {
@@ -74,7 +77,11 @@ class TaskSupervisor {
         }
         if (task.actionStack.length === 0) {
           if (tr.repeatable) {
-            tr.status = "PENDING";
+            let isRepeatableComplete = false;
+            if (taskHandler.isRepeatableComplete) {
+              isRepeatableComplete = taskHandler.isRepeatableComplete(creep, task.action);
+            }
+            tr.status = isRepeatableComplete ? "COMPLETE" : "PENDING";
           } else {
             tr.status = "COMPLETE";
           }
@@ -150,6 +157,9 @@ const getTaskActionHander = (ta: TaskAction): BaseTaskAction<unknown, unknown> =
 
     case TaskActionType.MOVE:
       return moveAction;
+
+    case TaskActionType.BUILD:
+      return buildAction;
 
     default:
       throw new Error(`TaskAction handler for ${ta.type} not found`);
