@@ -11,7 +11,7 @@ interface SpawnRequest {
   name: string;
   spawnId: string;
   bodyParts: Array<BodyPartConstant>;
-  stickyTask?: NewTaskRequest;
+  taskRequests?: Array<NewTaskRequest>;
 }
 
 class SpawnSupervisor {
@@ -48,10 +48,10 @@ class SpawnSupervisor {
           if (spawn.spawnCreep(bodyParts, request.name, { dryRun: true }) === OK) {
             console.log(`SpawnerSupervisor: spawning ${request.name} with bodyparts ${JSON.stringify(bodyParts)}`);
             const opts: SpawnOptions = {};
-            if (request.stickyTask) {
+            if (request.taskRequests) {
               opts.memory = {
                 busy: true,
-                taskRequest: { ...request.stickyTask, sticky: true, id: uuid.v4() }
+                taskRequests: request.taskRequests.map(tr => ({ ...tr, sticky: true, id: uuid.v4() }))
               };
             }
             spawn.spawnCreep(bodyParts, request.name, opts);

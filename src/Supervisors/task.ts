@@ -15,7 +15,6 @@ import {
   BaseTaskAction,
   BaseTaskPrerequisite,
   TaskAction,
-  TaskActionEmoji,
   TaskActionType,
   TaskPrerequisite,
   TaskPrerequisiteType,
@@ -29,7 +28,7 @@ declare global {
   }
 
   interface CreepMemory {
-    taskRequest?: TaskRequest;
+    taskRequests?: Array<TaskRequest>;
   }
 }
 export type NewTaskRequest = Omit<TaskRequest, "id">;
@@ -57,7 +56,8 @@ class TaskSupervisor {
           if (meets) {
             actionStack.push(tr.task.action);
             creep.memory.busy = true;
-            creep.memory.taskRequest = tr;
+            creep.memory.taskRequests ??= [];
+            creep.memory.taskRequests.push(tr);
             tr.task.actionStack = actionStack;
             tr.assignedCreep = creep.id;
             tr.status = "INPROCESS";
@@ -70,7 +70,8 @@ class TaskSupervisor {
   runCreepTasks() {
     const busyCreeps = findBusyCreeps();
     for (const creep of busyCreeps) {
-      const taskRequest = creep.memory.taskRequest;
+      creep.memory.taskRequests ??= [];
+      const taskRequest = creep.memory.taskRequests[0];
       if (!taskRequest) {
         creep.memory.busy = false;
         return;
@@ -83,7 +84,7 @@ class TaskSupervisor {
       // If this is a sticky task, ensure we have loaded the actions
       if (task.actionStack.length === 0 && taskRequest.sticky) {
         const actionStack: Array<TaskAction> = [];
-        const meets = this.doesCreepMeetPrerequisites(creep, task.action, actionStack);
+        this.doesCreepMeetPrerequisites(creep, task.action, actionStack);
         actionStack.push(task.action);
         task.actionStack = actionStack;
       }
@@ -94,6 +95,7 @@ class TaskSupervisor {
           const handler = this.getTaskActionHander(action);
 
           // creep.say(`${TaskActionEmoji[action.type]} ${action.type}`);
+          // creep.say(TaskActionEmoji[action.type]);
           if (!handler.action(creep, action)) {
             task.actionStack.unshift(action);
           }
@@ -106,8 +108,7 @@ class TaskSupervisor {
               actionStack.push(task.action);
               task.actionStack = actionStack;
             } else {
-              creep.memory.busy = false;
-              creep.memory.taskRequest = undefined;
+              creep.memory.taskRequests.pop();
             }
             continue;
           }
@@ -123,8 +124,7 @@ class TaskSupervisor {
           }
 
           taskRequest.assignedCreep = undefined;
-          creep.memory.busy = false;
-          creep.memory.taskRequest = undefined;
+          creep.memory.taskRequests.pop();
         }
       }
 

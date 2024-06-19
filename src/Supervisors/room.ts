@@ -76,7 +76,7 @@ class RoomSupervisor {
               name: `Miner${container.id}`,
               spawnId: spawn.id,
               bodyParts: [MOVE, WORK, WORK, WORK, WORK],
-              stickyTask: taskRequest
+              taskRequests: [taskRequest]
             });
             break;
           }
@@ -92,7 +92,7 @@ class RoomSupervisor {
               name: `Miner${source.id}`,
               spawnId: spawn.id,
               bodyParts: [MOVE, WORK, WORK, WORK, WORK],
-              stickyTask: taskRequest
+              taskRequests: [taskRequest]
             });
             break;
           }
@@ -113,7 +113,7 @@ class RoomSupervisor {
           name: "Upgrader" + Game.time,
           spawnId: spawn.id,
           bodyParts: [WORK, MOVE, CARRY, MOVE, CARRY],
-          stickyTask: taskRequest
+          taskRequests: [taskRequest]
         });
       }
     }

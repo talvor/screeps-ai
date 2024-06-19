@@ -11,6 +11,9 @@ class MoveAction extends BaseTaskAction<RoomPosition, number> {
     opts.visualizePathStyle = { stroke: "#ffaa00", opacity: 0.5, lineStyle: "dotted" };
     let result: number = moveTo(creep, target, opts);
 
+    if (creep.name.startsWith("Miner")) {
+      console.log(`MoveAction: code=${result}`);
+    }
     // There is an issue with the screeps-cartographer version of moveTo
     // It has difficulty moving onto an exact location if distance is 0
     // so fallback to creep.moveTo
