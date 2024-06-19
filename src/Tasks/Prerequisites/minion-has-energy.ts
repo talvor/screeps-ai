@@ -1,6 +1,6 @@
 import { findClosestEnergySource } from "Selectors/creeps";
 import { harvestAction } from "Tasks/Actions/harvest";
-import { BaseTaskPrerequisite, TaskAction, TaskPrerequisite, TaskPrerequisiteType } from "Tasks/task";
+import { BaseTaskPrerequisite, TaskPrerequisite, TaskPrerequisiteType } from "Tasks/task";
 
 class MinionHasEnergy extends BaseTaskPrerequisite<undefined, undefined> {
   type = TaskPrerequisiteType.HAS_ENERGY;

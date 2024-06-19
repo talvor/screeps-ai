@@ -1,6 +1,5 @@
 import { moveAction } from "Tasks/Actions/move";
 import { BaseTaskPrerequisite, TaskAction, TaskPrerequisite, TaskPrerequisiteType } from "Tasks/task";
-import { MoveOpts } from "screeps-cartographer";
 import { packPos, unpackPos } from "utils/position";
 
 class MinionIsOn extends BaseTaskPrerequisite<RoomPosition | Source, undefined> {
@@ -10,7 +9,7 @@ class MinionIsOn extends BaseTaskPrerequisite<RoomPosition | Source, undefined> 
     const { pos } = this.decodeTP(tp);
     return [moveAction.make(pos, 0)];
   }
-  meets(creep: Creep, tp: TaskPrerequisite) {
+  meets(_creep: Creep, _tp: TaskPrerequisite) {
     // const { pos, distance } = this.decodeTP(tp);
     // return creep.pos.inRangeTo(pos, distance);
     return false;

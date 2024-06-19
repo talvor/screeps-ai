@@ -1,3 +1,4 @@
+import { findClosestEnergySource } from "Selectors/creeps";
 import { minionCanCarry } from "Tasks/Prerequisites/minion-can-carry";
 import { minionCanWork } from "Tasks/Prerequisites/minion-can-work";
 import { minionIsNear } from "Tasks/Prerequisites/minion-is-near";
@@ -14,15 +15,26 @@ class HarvestAction extends BaseTaskAction<Source, undefined> {
         return false;
       }
     }
-    let code = this.tryWithdraw(creep, ta.target as Id<StructureContainer>);
-    if (code !== OK) {
+
+    let code;
+    if (target instanceof StructureContainer) {
+      code = this.tryWithdraw(creep, ta.target as Id<StructureContainer>);
+    } else if (target instanceof Resource) {
       code = this.tryPickup(creep, ta.target as Id<Resource>);
-    }
-    if (code !== OK) {
+    } else {
       code = this.tryHarvest(creep, ta.target as Id<Source>);
     }
 
+    if (code === ERR_INVALID_TARGET) {
+      const newTarget = findClosestEnergySource(creep);
+      if (newTarget) {
+        ta.target = newTarget.id;
+        return false;
+      }
+    }
+
     if (code !== OK) {
+      // console.log(`HarvestAction: code=${code}`);
       return true; // Unable to harvest, end task
     }
     return creep.store.getFreeCapacity() === 0; // Task is not complete if creep still has capacity

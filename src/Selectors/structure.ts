@@ -20,3 +20,15 @@ export const findTowersInRoom = (room: Room, filterFn?: (tower: StructureTower) 
   if (!filterFn) return towers;
   return towers.filter(filterFn);
 };
+
+export const findStructuresNeedingRepair = (room: Room, repairThreshold = 0.5): Array<Structure> => {
+  const structures = room.find(FIND_STRUCTURES, {
+    filter: s => {
+      const damage = s.hitsMax - s.hits;
+      const perc = damage / s.hitsMax;
+      // console.log(`Structure: ${s.structureType} damage=${damage} perc=${perc}`);
+      return perc < repairThreshold;
+    }
+  });
+  return structures;
+};

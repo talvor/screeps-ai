@@ -2,7 +2,12 @@ import { makeRechargeTask } from "Tasks/recharge";
 import { makeUpgradeTask } from "Tasks/upgrade";
 import { taskSupervisor } from "./task";
 import { findFreeSpawnsInRoom, findSpawnsToRecharge } from "Selectors/spawns";
-import { findConstructionSitesInRoom, findExtensionsInRoom, findTowersInRoom } from "Selectors/structure";
+import {
+  findConstructionSitesInRoom,
+  findExtensionsInRoom,
+  findStructuresNeedingRepair,
+  findTowersInRoom
+} from "Selectors/structure";
 import { makeBuildTask } from "Tasks/build";
 import { spawnSupervisor } from "./spawn";
 import { TaskActionType } from "Tasks/task";
@@ -38,6 +43,11 @@ class RoomSupervisor {
         findTowersInRoom(room, tower => {
           return tower.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
         }).forEach(tower => taskSupervisor.requestNewTask(makeRechargeTask(tower)));
+      }
+
+      const repairStructures = findStructuresNeedingRepair(room, 0.9);
+      if (repairStructures.length > 0) {
+        // console.log(repairStructures.length);
       }
     }
 

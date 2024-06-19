@@ -1,5 +1,5 @@
 import { minionCanWork } from "Tasks/Prerequisites/minion-can-work";
-import { minionIsNear } from "Tasks/Prerequisites/minion-is-near";
+import { minionIsOn } from "Tasks/Prerequisites/minion-is-on";
 import { BaseTaskAction, TaskAction, TaskActionType } from "Tasks/task";
 import { moveTo } from "screeps-cartographer";
 
@@ -28,7 +28,7 @@ class MineAction extends BaseTaskAction<Source, MineActionParams> {
     return {
       type: this.type,
       target: target.id,
-      prereqs: [minionCanWork.make(), minionIsNear.make(params.pos, params.distance)]
+      prereqs: [minionCanWork.make(), minionIsOn.make(params.pos)]
     };
   }
 }

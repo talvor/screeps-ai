@@ -9,7 +9,7 @@ class MinionIsNear extends BaseTaskPrerequisite<RoomPosition | Source, number> {
     const { pos, distance } = this.decodeTP(tp);
     return [moveAction.make(pos, distance)];
   }
-  meets(creep: Creep, tp: TaskPrerequisite) {
+  meets(_creep: Creep, _tp: TaskPrerequisite) {
     // const { pos, distance } = this.decodeTP(tp);
     // return creep.pos.inRangeTo(pos, distance);
     return false;
