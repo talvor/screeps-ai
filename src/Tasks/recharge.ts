@@ -1,8 +1,9 @@
-import { transferAction } from "Tasks/Actions/transfer";
-import { TaskAction, TaskActionType, TaskRequest } from "Tasks/task";
+import { NewTaskRequest } from "Supervisors/task";
+import { TransferTarget, transferAction } from "Tasks/Actions/transfer";
+import { TaskActionType } from "Tasks/task";
 
-export const makeRechargeTask = (target: StructureSpawn): TaskRequest => ({
-  name: `Recharge: ${target.name}`,
+export const makeRechargeTask = (target: TransferTarget): NewTaskRequest => ({
+  name: `Recharge: ${target.structureType}_${target.id} `,
   task: {
     type: TaskActionType.TRANSFER,
     action: transferAction.make(target),
@@ -10,5 +11,6 @@ export const makeRechargeTask = (target: StructureSpawn): TaskRequest => ({
   },
   roomName: target.room.name,
   status: "PENDING",
+  priority: 10,
   minionParts: [WORK, MOVE, CARRY]
 });

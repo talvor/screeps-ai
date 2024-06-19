@@ -1,7 +1,8 @@
-import { TaskAction, TaskActionType, TaskRequest } from "Tasks/task";
+import { TaskActionType } from "Tasks/task";
 import { upgradeAction } from "./Actions/upgrade";
+import { NewTaskRequest } from "Supervisors/task";
 
-export const makeUpgradeTask = (target: StructureController, idx: number): TaskRequest => ({
+export const makeUpgradeTask = (target: StructureController, idx: number): NewTaskRequest => ({
   name: `Upgrade: controller_${target.room.name}#${idx}`,
   task: {
     type: TaskActionType.UPGRADE,
@@ -10,5 +11,6 @@ export const makeUpgradeTask = (target: StructureController, idx: number): TaskR
   },
   roomName: target.room.name,
   status: "PENDING",
+  priority: 0,
   minionParts: [WORK, MOVE, CARRY]
 });

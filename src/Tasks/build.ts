@@ -1,7 +1,8 @@
-import { TaskActionType, TaskRequest } from "Tasks/task";
+import { TaskActionType } from "Tasks/task";
 import { buildAction } from "./Actions/build";
+import { NewTaskRequest } from "Supervisors/task";
 
-export const makeBuildTask = (target: ConstructionSite, roomName: string): TaskRequest => ({
+export const makeBuildTask = (target: ConstructionSite, roomName: string): NewTaskRequest => ({
   name: `Build: ${target.id}`,
   task: {
     type: TaskActionType.BUILD,
@@ -10,6 +11,7 @@ export const makeBuildTask = (target: ConstructionSite, roomName: string): TaskR
   },
   roomName: roomName,
   status: "PENDING",
+  priority: 1,
   repeatable: true,
   minionParts: [WORK, MOVE, CARRY]
 });

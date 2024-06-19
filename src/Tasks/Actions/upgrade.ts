@@ -7,6 +7,9 @@ class UpgradeAction extends BaseTaskAction<StructureController, undefined> {
   type = TaskActionType.UPGRADE;
 
   action(creep: Creep, ta: TaskAction) {
+    // If creep has no energy end task;
+    if (creep.store.getUsedCapacity() === 0) return true;
+
     const targetId = ta.target as Id<StructureController>;
     const target = Game.getObjectById(targetId);
     if (!target) {

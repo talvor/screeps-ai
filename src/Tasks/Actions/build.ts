@@ -7,6 +7,9 @@ class BuildAction extends BaseTaskAction<ConstructionSite, undefined> {
   type = TaskActionType.BUILD;
 
   action(creep: Creep, ta: TaskAction) {
+    // If creep has no energy end task;
+    if (creep.store.getUsedCapacity() === 0) return true;
+
     const id = ta.target as Id<ConstructionSite>;
     const constructionSite = Game.getObjectById(id);
     if (!constructionSite) {
@@ -15,6 +18,7 @@ class BuildAction extends BaseTaskAction<ConstructionSite, undefined> {
     }
     const code = creep.build(constructionSite);
     if (code !== OK) {
+      if (code === ERR_NOT_IN_RANGE) return true;
       if (code === ERR_NOT_ENOUGH_RESOURCES) return true;
       if (constructionSite.progress < constructionSite.progressTotal) return false;
       return true; // Unable to build, end task

@@ -3,11 +3,16 @@ import { minionHasEnergy } from "Tasks/Prerequisites/minion-has-energy";
 import { minionIsNear } from "Tasks/Prerequisites/minion-is-near";
 import { BaseTaskAction, TaskAction, TaskActionType } from "Tasks/task";
 
-class TransferAction extends BaseTaskAction<StructureSpawn, undefined> {
+export type TransferTarget = StructureSpawn | StructureExtension | StructureTower;
+
+class TransferAction extends BaseTaskAction<TransferTarget, undefined> {
   type = TaskActionType.TRANSFER;
 
   action(creep: Creep, ta: TaskAction) {
-    const id = ta.target as Id<StructureSpawn>;
+    // If creep has no energy end task;
+    if (creep.store.getUsedCapacity() === 0) return true;
+
+    const id = ta.target as Id<StructureSpawn | StructureExtension>;
     const target = Game.getObjectById(id);
     if (!target || creep.transfer(target, RESOURCE_ENERGY) !== OK) {
       return true; // Unable to build, end task
@@ -15,13 +20,13 @@ class TransferAction extends BaseTaskAction<StructureSpawn, undefined> {
     return false; // Task is not complete
   }
   cost(creep: Creep, ta: TaskAction) {
-    const id = ta.target as Id<StructureSpawn>;
+    const id = ta.target as Id<TransferTarget>;
     const target = Game.getObjectById(id);
     if (!target) throw new Error("Could not find target");
     creep.pos.getRangeTo(target.pos);
   }
 
-  make(target: StructureSpawn) {
+  make(target: TransferTarget) {
     return {
       type: this.type,
       target: target.id,

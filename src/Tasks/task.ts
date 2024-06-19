@@ -1,6 +1,7 @@
 export enum TaskActionType {
   BUILD = "BUILD",
   HARVEST = "HARVEST",
+  MINE = "MINE",
   MOVE = "MOVE",
   TRANSFER = "TRANSFER",
   UPGRADE = "UPGRADE"
@@ -9,6 +10,7 @@ type EmojiRecord = Record<keyof typeof TaskActionType, any>;
 export const TaskActionEmoji: EmojiRecord = {
   BUILD: "🛠️",
   HARVEST: "⛏️",
+  MINE: "⛏️",
   MOVE: "🚶",
   TRANSFER: "🔀",
   UPGRADE: "⬆️"
@@ -18,7 +20,8 @@ export enum TaskPrerequisiteType {
   CAN_MOVE = "CAN_MOVE",
   CAN_WORK = "CAN_WORK",
   HAS_ENERGY = "HAS_ENERGY",
-  IS_NEAR = "IS_NEAR"
+  IS_NEAR = "IS_NEAR",
+  IS_ON = "IS_ON"
 }
 export interface TaskAction {
   type: TaskActionType;
@@ -33,13 +36,16 @@ export interface TaskPrerequisite {
 }
 
 export interface TaskRequest {
+  id: string;
   name: string;
   task: Task;
   status: "PENDING" | "INPROCESS" | "COMPLETE";
   roomName: string;
+  priority: number;
   repeatable?: boolean;
   minionParts?: Array<BodyPartConstant>;
   assignedCreep?: Id<Creep>;
+  sticky?: boolean; // Sticks to the assigned creep when complete
 }
 
 export interface Task {
@@ -73,15 +79,5 @@ export abstract class BaseTaskPrerequisite<Target, Params> {
     return {
       type: this.type
     };
-  }
-}
-
-declare global {
-  interface Memory {
-    taskRequests: Array<TaskRequest>;
-  }
-
-  interface CreepMemory {
-    taskRequest?: TaskRequest;
   }
 }
