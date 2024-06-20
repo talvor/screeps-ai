@@ -1,5 +1,5 @@
+import { NewTaskRequest } from "Task/task";
 import { uuid } from "utils/uuid";
-import { NewTaskRequest } from "./task";
 
 declare global {
   interface Memory {
@@ -51,7 +51,12 @@ class SpawnSupervisor {
             if (request.taskRequests) {
               opts.memory = {
                 busy: true,
-                taskRequests: request.taskRequests.map(tr => ({ ...tr, sticky: true, id: uuid.v4() }))
+                taskRequests: request.taskRequests.map(tr => ({
+                  ...tr,
+                  id: uuid.v4(),
+                  currentTask: 0,
+                  status: "PENDING"
+                }))
               };
             }
             spawn.spawnCreep(bodyParts, request.name, opts);

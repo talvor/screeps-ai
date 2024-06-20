@@ -1,25 +1,7 @@
 import { findBusyCreeps } from "Selectors/creeps";
-import { buildAction } from "Tasks/Actions/build";
-import { harvestAction } from "Tasks/Actions/harvest";
-import { mineAction } from "Tasks/Actions/mine";
-import { moveAction } from "Tasks/Actions/move";
-import { transferAction } from "Tasks/Actions/transfer";
-import { upgradeAction } from "Tasks/Actions/upgrade";
-import { minionCanCarry } from "Tasks/Prerequisites/minion-can-carry";
-import { minionCanMove } from "Tasks/Prerequisites/minion-can-move";
-import { minionCanWork } from "Tasks/Prerequisites/minion-can-work";
-import { minionHasEnergy } from "Tasks/Prerequisites/minion-has-energy";
-import { minionIsNear } from "Tasks/Prerequisites/minion-is-near";
-import { minionIsOn } from "Tasks/Prerequisites/minion-is-on";
-import {
-  BaseTaskAction,
-  BaseTaskPrerequisite,
-  TaskAction,
-  TaskActionType,
-  TaskPrerequisite,
-  TaskPrerequisiteType,
-  TaskRequest
-} from "Tasks/task";
+import { NewTaskRequest } from "Task/task";
+import { TaskRequest } from "Task/task";
+import { getTaskHandler } from "Task/utils";
 import { uuid } from "utils/uuid";
 
 declare global {
@@ -31,14 +13,18 @@ declare global {
     taskRequests?: Array<TaskRequest>;
   }
 }
-export type NewTaskRequest = Omit<TaskRequest, "id">;
-
 class TaskSupervisor {
-  requestNewTask(taskRequest: NewTaskRequest) {
-    const newTaskRequest = { id: uuid.v4(), ...taskRequest };
+  requestNewTask(newTaskRequest: NewTaskRequest) {
+    const taskRequest: TaskRequest = {
+      id: uuid.v4(),
+      currentTask: 0,
+      status: "PENDING",
+      assignedCreep: undefined,
+      ...newTaskRequest
+    };
     if (Memory.taskRequests.findIndex(tr => tr.name === newTaskRequest.name) === -1) {
       console.log(`TaskSupervisor: scheduling task ${newTaskRequest.name}`);
-      Memory.taskRequests.push(newTaskRequest);
+      Memory.taskRequests.push(taskRequest);
     }
   }
 
@@ -51,14 +37,17 @@ class TaskSupervisor {
       const creeps = Object.values(Game.creeps);
       for (const creep of creeps) {
         if (!creep.memory.busy && !creep.spawning) {
-          const actionStack: Array<TaskAction> = [];
-          const meets = this.doesCreepMeetPrerequisites(creep, tr.task.action, actionStack);
+          // const meets = this.doesCreepMeetPrerequisites(creep, tr.tasks[0].actions[0]);
+
+          const meets = tr.tasks.reduce((pv, task) => {
+            const taskHandler = getTaskHandler(task);
+            return pv && taskHandler.checkCreepMeetsPrerequisites(creep);
+          }, true);
+
           if (meets) {
-            actionStack.push(tr.task.action);
             creep.memory.busy = true;
             creep.memory.taskRequests ??= [];
             creep.memory.taskRequests.push(tr);
-            tr.task.actionStack = actionStack;
             tr.assignedCreep = creep.id;
             tr.status = "INPROCESS";
           }
@@ -77,63 +66,51 @@ class TaskSupervisor {
         return;
       }
 
-      const task = taskRequest.task;
+      if (taskRequest.status === "COMPLETE") continue;
+      if (taskRequest.status === "PENDING") taskRequest.status = "INPROCESS";
 
-      const taskHandler = this.getTaskActionHander(task.action);
-
-      // If this is a sticky task, ensure we have loaded the actions
-      if (task.actionStack.length === 0 && taskRequest.sticky) {
-        const actionStack: Array<TaskAction> = [];
-        this.doesCreepMeetPrerequisites(creep, task.action, actionStack);
-        actionStack.push(task.action);
-        task.actionStack = actionStack;
+      if (taskRequest.tasks.length === 0) {
+        // No tasks left, so complete the request
+        this.completeTaskRequest(creep, taskRequest);
+        continue;
       }
 
-      if (task.actionStack.length > 0 && creep) {
-        const action = task.actionStack.shift();
-        if (action) {
-          const handler = this.getTaskActionHander(action);
-
-          // creep.say(`${TaskActionEmoji[action.type]} ${action.type}`);
-          // creep.say(TaskActionEmoji[action.type]);
-          if (!handler.action(creep, action)) {
-            task.actionStack.unshift(action);
-          }
-        }
-        if (task.actionStack.length === 0) {
-          if (taskRequest.sticky) {
-            const actionStack: Array<TaskAction> = [];
-            const meets = this.doesCreepMeetPrerequisites(creep, task.action, actionStack);
-            if (meets) {
-              actionStack.push(task.action);
-              task.actionStack = actionStack;
-            } else {
-              creep.memory.taskRequests.pop();
-            }
-            continue;
-          }
-
-          if (taskRequest.repeatable) {
-            let isRepeatableComplete = false;
-            if (taskHandler.isRepeatableComplete) {
-              isRepeatableComplete = taskHandler.isRepeatableComplete(creep, task.action);
-            }
-            taskRequest.status = isRepeatableComplete ? "COMPLETE" : "PENDING";
-          } else {
-            taskRequest.status = "COMPLETE";
-          }
-
-          taskRequest.assignedCreep = undefined;
-          creep.memory.taskRequests.pop();
+      if (taskRequest.currentTask >= taskRequest.tasks.length) {
+        // Completed all the tasks, need to check if the request should be repeated
+        if (taskRequest.repeatable) {
+          // Reset the currentTask to beginning
+          taskRequest.currentTask = 0;
         }
       }
-
-      // Sync task request status to task register
-      const tr = Memory.taskRequests.find(req => req.id === taskRequest.id);
-      if (tr) {
-        tr.status = taskRequest.status;
-        tr.assignedCreep = taskRequest.assignedCreep;
+      const task = taskRequest.tasks[taskRequest.currentTask];
+      if (!task) {
+        taskRequest.status = "COMPLETE";
+        this.completeTaskRequest(creep, taskRequest);
+        continue;
       }
+
+      const taskHandler = getTaskHandler(task);
+      if (taskHandler.execute(creep, task)) {
+        taskRequest.currentTask++;
+      }
+    }
+  }
+
+  completeTaskRequest(creep: Creep, taskRequest: TaskRequest) {
+    taskRequest.status === "COMPLETE";
+    taskRequest.assignedCreep = undefined;
+
+    creep.memory.busy = false;
+    creep.memory.taskRequests = creep.memory.taskRequests?.filter(tr => tr.id !== taskRequest.id);
+    this.syncTaskRequest(taskRequest);
+  }
+
+  syncTaskRequest(taskRequest: TaskRequest) {
+    // Sync task request status to task register
+    const tr = Memory.taskRequests.find(req => req.id === taskRequest.id);
+    if (tr) {
+      tr.status = taskRequest.status;
+      tr.assignedCreep = taskRequest.assignedCreep;
     }
   }
 
@@ -156,75 +133,6 @@ class TaskSupervisor {
       if (filterFn) return filterFn(request);
       return true;
     });
-  }
-  private doesCreepMeetPrerequisites(creep: Creep, action: TaskAction, actionStack: TaskAction[]): boolean {
-    let meets = true;
-    //
-    for (const tp of action.prereqs) {
-      const handler = this.getTaskPrerequisiteHandler(tp);
-
-      let tpMeets = handler.meets(creep, tp);
-      if (!tpMeets) {
-        for (const ta of handler.toMeet(creep, tp)) {
-          const taMeets = this.doesCreepMeetPrerequisites(creep, ta, actionStack);
-          if (taMeets) actionStack.push(ta);
-          tpMeets = taMeets;
-
-          if (!tpMeets) break;
-        }
-      }
-      meets = meets && tpMeets;
-      // if (!meets) break;
-    }
-    return meets;
-  }
-  private getTaskPrerequisiteHandler(tp: TaskPrerequisite): BaseTaskPrerequisite<unknown, unknown> {
-    switch (tp.type) {
-      case TaskPrerequisiteType.HAS_ENERGY:
-        return minionHasEnergy;
-
-      case TaskPrerequisiteType.IS_NEAR:
-        return minionIsNear;
-
-      case TaskPrerequisiteType.CAN_WORK:
-        return minionCanWork;
-
-      case TaskPrerequisiteType.CAN_MOVE:
-        return minionCanMove;
-
-      case TaskPrerequisiteType.CAN_CARRY:
-        return minionCanCarry;
-
-      case TaskPrerequisiteType.IS_ON:
-        return minionIsOn;
-
-      default:
-        throw new Error(`TaskPrerequisite handler for ${tp.type} not found`);
-    }
-  }
-  private getTaskActionHander(ta: TaskAction): BaseTaskAction<unknown, unknown> {
-    switch (ta.type) {
-      case TaskActionType.UPGRADE:
-        return upgradeAction;
-
-      case TaskActionType.TRANSFER:
-        return transferAction;
-
-      case TaskActionType.HARVEST:
-        return harvestAction;
-
-      case TaskActionType.MOVE:
-        return moveAction;
-
-      case TaskActionType.BUILD:
-        return buildAction;
-
-      case TaskActionType.MINE:
-        return mineAction;
-
-      default:
-        throw new Error(`TaskAction handler for ${ta.type} not found`);
-    }
   }
 }
 

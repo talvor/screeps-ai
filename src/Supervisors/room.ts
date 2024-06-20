@@ -1,5 +1,3 @@
-import { makeRechargeTask } from "Tasks/recharge";
-import { makeUpgradeTask } from "Tasks/upgrade";
 import { taskSupervisor } from "./task";
 import { findFreeSpawnsInRoom, findSpawnsToRecharge } from "Selectors/spawns";
 import {
@@ -8,16 +6,20 @@ import {
   findStructuresNeedingRepair,
   findTowersInRoom
 } from "Selectors/structure";
-import { makeBuildTask } from "Tasks/build";
 import { spawnSupervisor } from "./spawn";
-import { TaskActionType } from "Tasks/task";
+import { TaskType } from "Task/task";
 import { countCreepsWithName } from "Selectors/creeps";
 import { findContainersInRoom, findSourcesInRoom } from "Selectors/room";
-import { makeMineTask } from "Tasks/mine";
 import { blockSquare } from "screeps-cartographer";
+import { rechargeTask } from "Task/Tasks/recharge";
+import { buildTask } from "Task/Tasks/build";
+import { repairTask } from "Task/Tasks/repair";
+import { suicideTask } from "Task/Tasks/suicide";
+import { mineTask } from "Task/Tasks/mine";
+import { upgradeTask } from "Task/Tasks/upgrade";
 
 const WORKERS_PCL = 2; // Workers per controller level
-const BUILD_TASK_PCL = 2; // Build tasks per controller level
+const TASKS_PER_TYPE_PCL = 2; // Build tasks per controller level
 const UPGRADERS_PCL = 2;
 
 class RoomSupervisor {
@@ -30,19 +32,21 @@ class RoomSupervisor {
         this.createWorkers(room);
         this.createMiners(room);
         this.createUpraders(room);
+        // this.createRepairer(room);
 
         // Create task requests
         this.createBuildRequests(room, controller);
+        // this.createRepairRequests(room);
 
         // Create recharge task for extensions that need energy
         findExtensionsInRoom(room, extension => {
           return extension.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
-        }).forEach(extension => taskSupervisor.requestNewTask(makeRechargeTask(extension)));
+        }).forEach(extension => taskSupervisor.requestNewTask(rechargeTask.makeRequest(extension)));
 
         // Create recharge task for towers that need energy
         findTowersInRoom(room, tower => {
           return tower.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
-        }).forEach(tower => taskSupervisor.requestNewTask(makeRechargeTask(tower)));
+        }).forEach(tower => taskSupervisor.requestNewTask(rechargeTask.makeRequest(tower)));
       }
 
       const repairStructures = findStructuresNeedingRepair(room, 0.9);
@@ -52,19 +56,51 @@ class RoomSupervisor {
     }
 
     // Create a recharge task for each spawn that needs energy
-    findSpawnsToRecharge().forEach(spawn => taskSupervisor.requestNewTask(makeRechargeTask(spawn)));
+    findSpawnsToRecharge().forEach(spawn => taskSupervisor.requestNewTask(rechargeTask.makeRequest(spawn)));
   }
 
   createBuildRequests(room: Room, controller: StructureController) {
     // Create a build task for each construction site in the room
     const buildRequests = taskSupervisor.findRequests(room, request => {
-      return request.task.type === TaskActionType.BUILD;
+      return request.type === TaskType.BUILD;
     });
 
-    if (buildRequests.length < controller.level * BUILD_TASK_PCL) {
+    if (buildRequests.length < controller.level * TASKS_PER_TYPE_PCL) {
       for (const cs of findConstructionSitesInRoom(room)) {
-        if (buildRequests.findIndex(r => r.task.action.target === cs.id) === -1) {
-          taskSupervisor.requestNewTask(makeBuildTask(cs, room.name));
+        if (buildRequests.findIndex(r => r.tasks[0].target === cs.id) === -1) {
+          taskSupervisor.requestNewTask(buildTask.makeRequest(cs));
+          break;
+        }
+      }
+    }
+  }
+
+  createRepairer(room: Room) {
+    const spawn = findFreeSpawnsInRoom(room.name);
+    if (countCreepsWithName("Repairer", room) === 0) {
+      const repairStructures = findStructuresNeedingRepair(room, 0.9);
+      if (spawn && repairStructures.length > 0) {
+        const structures = repairStructures.splice(0, 4);
+        const taskRequests = structures.map(s => repairTask.makeRequest(s));
+        taskRequests.push(suicideTask.makeRequest());
+        spawnSupervisor.requestNewMinion({
+          name: `Repairer${Game.time}`,
+          spawnId: spawn.id,
+          bodyParts: [MOVE, CARRY, WORK, CARRY, WORK],
+          taskRequests: taskRequests
+        });
+      }
+    }
+  }
+
+  createRepairRequests(room: Room) {
+    const repairRequests = taskSupervisor.findRequests(room, request => {
+      return request.tasks[0].type === TaskType.REPAIR;
+    });
+    if (repairRequests.length < 4) {
+      for (const rs of findStructuresNeedingRepair(room, 0.9)) {
+        if (repairRequests.findIndex(r => r.tasks[0].target === rs.id) === -1) {
+          taskSupervisor.requestNewTask(repairTask.makeRequest(rs));
           break;
         }
       }
@@ -81,7 +117,7 @@ class RoomSupervisor {
           const source = container.pos.findClosestByRange(FIND_SOURCES_ACTIVE);
           if (spawn && source) {
             blockSquare(container.pos);
-            const taskRequest = makeMineTask(source, container.pos, 0);
+            const taskRequest = mineTask.makeRequest(source, { pos: container.pos, distance: 0 });
             spawnSupervisor.requestNewMinion({
               name: `Miner${container.id}`,
               spawnId: spawn.id,
@@ -97,7 +133,7 @@ class RoomSupervisor {
       for (const source of sources) {
         if (countCreepsWithName(`Miner${source.id}`, room) === 0) {
           if (spawn) {
-            const taskRequest = makeMineTask(source, source.pos, 1);
+            const taskRequest = mineTask.makeRequest(source, { pos: source.pos, distance: 1 });
             spawnSupervisor.requestNewMinion({
               name: `Miner${source.id}`,
               spawnId: spawn.id,
@@ -117,7 +153,7 @@ class RoomSupervisor {
     const controller = room.controller;
     const upgraderCount = countCreepsWithName("Upgrader", room);
     if (controller && upgraderCount < controller.level * UPGRADERS_PCL) {
-      const taskRequest = makeUpgradeTask(controller, Game.time);
+      const taskRequest = upgradeTask.makeRequest(controller);
       if (spawn) {
         spawnSupervisor.requestNewMinion({
           name: "Upgrader" + Game.time,

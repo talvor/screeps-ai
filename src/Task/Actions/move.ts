@@ -1,4 +1,4 @@
-import { BaseTaskAction, TaskAction, TaskActionType } from "Tasks/task";
+import { BaseTaskAction, TaskAction, TaskActionType } from "Task/task";
 import { moveTo } from "screeps-cartographer";
 import { packPos, unpackPos } from "utils/position";
 
@@ -7,6 +7,8 @@ class MoveAction extends BaseTaskAction<RoomPosition, number> {
 
   action(creep: Creep, ta: TaskAction) {
     const { target, distance } = this.decodeTA(ta);
+    if (creep.pos.inRangeTo(target, distance)) return true;
+
     const opts: MoveToOpts = {};
     opts.visualizePathStyle = { stroke: "#ffaa00", opacity: 0.5, lineStyle: "dotted" };
     let result: number = moveTo(creep, target, opts);
@@ -26,16 +28,11 @@ class MoveAction extends BaseTaskAction<RoomPosition, number> {
       return true; // Unrecoverable error
     return creep.pos.inRangeTo(target, distance);
   }
-  cost(creep: Creep, ta: TaskAction) {
-    const { target } = this.decodeTA(ta);
-    creep.pos.getRangeTo(target);
-  }
   make(target: RoomPosition, distance = 0): TaskAction {
     return {
       type: this.type,
       target: packPos(target),
-      params: { distance },
-      prereqs: []
+      params: { distance }
     };
   }
 

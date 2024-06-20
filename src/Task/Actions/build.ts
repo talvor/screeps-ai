@@ -1,7 +1,5 @@
-import { minionCanWork } from "Tasks/Prerequisites/minion-can-work";
-import { minionHasEnergy } from "Tasks/Prerequisites/minion-has-energy";
-import { minionIsNear } from "Tasks/Prerequisites/minion-is-near";
-import { BaseTaskAction, TaskAction, TaskActionType } from "Tasks/task";
+import { BaseTaskAction, TaskAction, TaskActionType } from "Task/task";
+import { moveAction } from "./move";
 
 class BuildAction extends BaseTaskAction<ConstructionSite, undefined> {
   type = TaskActionType.BUILD;
@@ -9,6 +7,9 @@ class BuildAction extends BaseTaskAction<ConstructionSite, undefined> {
   action(creep: Creep, ta: TaskAction) {
     // If creep has no energy end task;
     if (creep.store.getUsedCapacity() === 0) return true;
+
+    // Move to location and continue only when we are there
+    if (ta.moveAction && !moveAction.action(creep, ta.moveAction)) return false;
 
     const id = ta.target as Id<ConstructionSite>;
     const constructionSite = Game.getObjectById(id);
@@ -36,10 +37,10 @@ class BuildAction extends BaseTaskAction<ConstructionSite, undefined> {
     return {
       type: this.type,
       target: target.id,
-      prereqs: [minionCanWork.make(), minionHasEnergy.make(), minionIsNear.make(target.pos, 3)]
+      moveAction: moveAction.make(target.pos, 3)
     };
   }
-  isRepeatableComplete(_creep: Creep, ta: TaskAction): boolean {
+  shouldRepeatAction(_creep: Creep, ta: TaskAction): boolean {
     const id = ta.target as Id<ConstructionSite>;
     const constructionSite = Game.getObjectById(id);
     if (!constructionSite) return true;

@@ -1,14 +1,23 @@
 import { findClosestEnergySource } from "Selectors/creeps";
-import { minionCanCarry } from "Tasks/Prerequisites/minion-can-carry";
-import { minionCanWork } from "Tasks/Prerequisites/minion-can-work";
-import { minionIsNear } from "Tasks/Prerequisites/minion-is-near";
-import { BaseTaskAction, TaskAction, TaskActionType } from "Tasks/task";
+import { BaseTaskAction, TaskAction, TaskActionType } from "Task/task";
 
-class HarvestAction extends BaseTaskAction<Source, undefined> {
+type HarvestTarget = StructureContainer | Resource | Source;
+
+class HarvestAction extends BaseTaskAction<undefined, undefined> {
   type = TaskActionType.HARVEST;
 
   action(creep: Creep, ta: TaskAction) {
-    const target = Game.getObjectById(ta.target as Id<StructureContainer | Resource | Source>);
+    let target: HarvestTarget | null;
+
+    if (!ta.target) {
+      target = findClosestEnergySource(creep) || null;
+      if (target) {
+        ta.target = target.id;
+      }
+    } else {
+      target = Game.getObjectById(ta.target as Id<HarvestTarget>);
+    }
+
     if (target) {
       if (!creep.pos.isNearTo(target)) {
         creep.moveTo(target);
@@ -34,7 +43,6 @@ class HarvestAction extends BaseTaskAction<Source, undefined> {
     }
 
     if (code !== OK) {
-      // console.log(`HarvestAction: code=${code}`);
       return true; // Unable to harvest, end task
     }
     return creep.store.getFreeCapacity() === 0; // Task is not complete if creep still has capacity
@@ -55,11 +63,10 @@ class HarvestAction extends BaseTaskAction<Source, undefined> {
     return structure ? creep.withdraw(structure, RESOURCE_ENERGY) : ERR_INVALID_TARGET;
   }
 
-  make(target: Source | Resource | StructureContainer | Tombstone): TaskAction {
+  make(): TaskAction {
     return {
       type: this.type,
-      target: target.id,
-      prereqs: [minionCanWork.make(), minionCanCarry.make(), minionIsNear.make(target.pos, 1)]
+      target: undefined
     };
   }
 }
