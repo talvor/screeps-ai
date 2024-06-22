@@ -1,7 +1,7 @@
 import { findClosestEnergySource } from "Selectors/creeps";
 import { BaseTaskAction, TaskAction, TaskActionType } from "Task/task";
 
-type HarvestTarget = StructureContainer | Resource | Source;
+type HarvestTarget = StructureContainer | Resource | Source | Ruin;
 
 class HarvestAction extends BaseTaskAction<undefined, undefined> {
   type = TaskActionType.HARVEST;
@@ -26,8 +26,8 @@ class HarvestAction extends BaseTaskAction<undefined, undefined> {
     }
 
     let code;
-    if (target instanceof StructureContainer) {
-      code = this.tryWithdraw(creep, ta.target as Id<StructureContainer>);
+    if (target instanceof StructureContainer || target instanceof Ruin) {
+      code = this.tryWithdraw(creep, ta.target as Id<StructureContainer>, ta);
     } else if (target instanceof Resource) {
       code = this.tryPickup(creep, ta.target as Id<Resource>);
     } else {
@@ -45,7 +45,12 @@ class HarvestAction extends BaseTaskAction<undefined, undefined> {
     if (code !== OK) {
       return true; // Unable to harvest, end task
     }
-    return creep.store.getFreeCapacity() === 0; // Task is not complete if creep still has capacity
+    const full = creep.store.getFreeCapacity() === 0; // Task is not complete if creep still has capacity
+    if (full) {
+      ta.target = undefined;
+    }
+
+    return full;
   }
 
   tryHarvest(creep: Creep, target: Id<Source>): number {
@@ -58,9 +63,11 @@ class HarvestAction extends BaseTaskAction<undefined, undefined> {
     return resource ? creep.pickup(resource) : ERR_INVALID_TARGET;
   }
 
-  tryWithdraw(creep: Creep, target: Id<StructureContainer>): number {
+  tryWithdraw(creep: Creep, target: Id<StructureContainer>, ta: TaskAction): number {
     const structure = Game.getObjectById(target);
-    return structure ? creep.withdraw(structure, RESOURCE_ENERGY) : ERR_INVALID_TARGET;
+    const code = structure ? creep.withdraw(structure, RESOURCE_ENERGY) : ERR_INVALID_TARGET;
+    if (code === ERR_NOT_ENOUGH_RESOURCES) ta.target = undefined;
+    return code;
   }
 
   make(): TaskAction {

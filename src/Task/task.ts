@@ -67,6 +67,7 @@ export abstract class BaseTask<Target, Params> {
 
   execute(creep: Creep, task: Task): boolean {
     if (task.actions.length === 0) return true;
+    if (task.currentAction >= task.actions.length) task.currentAction = 0;
 
     const action = task.actions[task.currentAction];
     const actionHandler = getTaskActionHander(action);

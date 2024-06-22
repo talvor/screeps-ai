@@ -22,23 +22,35 @@ export const countCreepsWithName = (name: string, room: Room): number => {
   return activeCount + requestCount;
 };
 
-export const findClosestEnergySource = (creep: Creep): Source | Resource | StructureContainer | undefined => {
+export type EnergySource = Source | Resource | StructureContainer | Ruin;
+
+export const findClosestEnergySource = (creep: Creep): EnergySource | undefined => {
+  let energySource: EnergySource | undefined = undefined;
   // Find dropped resources
-  const droppedResource = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES, {
-    filter: resource => resource.amount >= creep.store.getFreeCapacity()
-  });
-  if (droppedResource) return droppedResource;
+  const droppedResource = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES);
+  if (droppedResource) energySource = droppedResource;
+
+  // Find dropped ruins
+  const ruin = creep.pos.findClosestByPath(FIND_RUINS, { filter: r => r.store.getUsedCapacity(RESOURCE_ENERGY) > 0 });
+  if (ruin && energySource) {
+    if (creep.pos.getRangeTo(ruin) < creep.pos.getRangeTo(energySource)) {
+      energySource = ruin;
+    }
+  }
 
   // Find containers
   const container = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-    filter: structure => {
-      return (
-        structure.structureType === STRUCTURE_CONTAINER &&
-        structure.store.getUsedCapacity(RESOURCE_ENERGY) > creep.store.getFreeCapacity()
-      );
+    filter: s => {
+      return s.structureType === STRUCTURE_CONTAINER && s.store.getUsedCapacity(RESOURCE_ENERGY) > 0;
     }
   });
-  if (container) return container as StructureContainer;
+  if (container && energySource) {
+    if (creep.pos.getRangeTo(container) < creep.pos.getRangeTo(energySource)) {
+      energySource = container as StructureContainer;
+    }
+  }
+
+  if (energySource) return energySource;
 
   // Find source
   return creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE) || undefined;

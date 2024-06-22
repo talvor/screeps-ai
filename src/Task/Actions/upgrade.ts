@@ -1,4 +1,4 @@
-import { BaseTaskAction, TaskAction, TaskActionType } from "Task/task";
+import { BaseTaskAction, Task, TaskAction, TaskActionType } from "Task/task";
 import { moveAction } from "./move";
 
 class UpgradeAction extends BaseTaskAction<StructureController, undefined> {
@@ -23,11 +23,9 @@ class UpgradeAction extends BaseTaskAction<StructureController, undefined> {
     }
     return false; // Task is not complete
   }
-  cost(creep: Creep, ta: TaskAction) {
-    const id = ta.target as Id<StructureController>;
-    const target = Game.getObjectById(id);
-    if (!target) throw new Error("Could not find target");
-    creep.pos.getRangeTo(target.pos);
+
+  shouldRepeatTask(_creep: Creep, _task: Task): boolean {
+    return true;
   }
 
   make(target: StructureController) {

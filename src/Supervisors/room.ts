@@ -67,10 +67,7 @@ class RoomSupervisor {
 
     if (buildRequests.length < controller.level * TASKS_PER_TYPE_PCL) {
       for (const cs of findConstructionSitesInRoom(room)) {
-        if (buildRequests.findIndex(r => r.tasks[0].target === cs.id) === -1) {
-          taskSupervisor.requestNewTask(buildTask.makeRequest(cs));
-          break;
-        }
+        if (taskSupervisor.requestNewTask(buildTask.makeRequest(cs))) break;
       }
     }
   }

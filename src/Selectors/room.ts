@@ -13,3 +13,22 @@ export const findSourcesInRoom = (room: Room): Array<Source> => {
 export const findContainersInRoom = (room: Room): Array<StructureContainer> => {
   return room.find(FIND_STRUCTURES, { filter: s => s.structureType === STRUCTURE_CONTAINER });
 };
+
+export type EnergySource = Resource | Ruin;
+
+export const findFreeSource = (creep: Creep): EnergySource | undefined => {
+  let energySource: EnergySource | undefined = undefined;
+  // Find dropped resources
+  const droppedResource = creep.pos.findClosestByPath(FIND_DROPPED_RESOURCES);
+  if (droppedResource) energySource = droppedResource;
+
+  // Find dropped ruins
+  const ruin = creep.pos.findClosestByPath(FIND_RUINS, { filter: r => r.store.getUsedCapacity(RESOURCE_ENERGY) > 0 });
+  if (ruin && energySource) {
+    if (creep.pos.getRangeTo(ruin) < creep.pos.getRangeTo(energySource)) {
+      energySource = ruin;
+    }
+  }
+
+  return energySource;
+};

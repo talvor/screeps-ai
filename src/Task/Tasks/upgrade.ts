@@ -19,7 +19,7 @@ class UpgradeTask extends BaseTask<StructureController, undefined> {
       tasks: [this.make(target)],
       roomName: target.room.name,
       priority: 0,
-      repeatable: false
+      repeatable: true
     };
   }
 }

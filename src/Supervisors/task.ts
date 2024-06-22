@@ -14,7 +14,7 @@ declare global {
   }
 }
 class TaskSupervisor {
-  requestNewTask(newTaskRequest: NewTaskRequest) {
+  requestNewTask(newTaskRequest: NewTaskRequest): boolean {
     const taskRequest: TaskRequest = {
       id: uuid.v4(),
       currentTask: 0,
@@ -25,7 +25,10 @@ class TaskSupervisor {
     if (Memory.taskRequests.findIndex(tr => tr.name === newTaskRequest.name) === -1) {
       console.log(`TaskSupervisor: scheduling task ${newTaskRequest.name}`);
       Memory.taskRequests.push(taskRequest);
+      return true;
     }
+
+    return false;
   }
 
   runTaskScheduler() {
@@ -37,8 +40,6 @@ class TaskSupervisor {
       const creeps = Object.values(Game.creeps);
       for (const creep of creeps) {
         if (!creep.memory.busy && !creep.spawning) {
-          // const meets = this.doesCreepMeetPrerequisites(creep, tr.tasks[0].actions[0]);
-
           const meets = tr.tasks.reduce((pv, task) => {
             const taskHandler = getTaskHandler(task);
             return pv && taskHandler.checkCreepMeetsPrerequisites(creep);
