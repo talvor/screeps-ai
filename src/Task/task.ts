@@ -2,24 +2,30 @@ import { getTaskActionHander } from "./utils";
 
 export enum TaskActionType {
   BUILD = "BUILD",
+  DROP = "DROP",
   HARVEST = "HARVEST",
   MINE = "MINE",
   MOVE = "MOVE",
   TRANSFER = "TRANSFER",
   UPGRADE = "UPGRADE",
   REPAIR = "REPAIR",
-  SUICIDE = "SUICIDE"
+  SCAVENGE = "SCAVENGE",
+  SUICIDE = "SUICIDE",
+  WITHDRAW = "WITHDRAW"
 }
 type EmojiRecord = Record<keyof typeof TaskActionType, any>;
 export const TaskActionEmoji: EmojiRecord = {
   BUILD: "🛠️",
+  DROP: "",
+  SCAVENGE: "",
   HARVEST: "⛏️",
   MINE: "⛏️",
   MOVE: "🚶",
   TRANSFER: "🔀",
   UPGRADE: "⬆️",
   REPAIR: "🪛",
-  SUICIDE: "💀"
+  SUICIDE: "💀",
+  WITHDRAW: ""
 };
 
 export interface TaskAction {
@@ -31,9 +37,11 @@ export interface TaskAction {
 
 export enum TaskType {
   BUILD = "BUILD",
+  HAUL = "HAUL",
   MINE = "MINE",
   RECHARGE = "RECHARGE",
   REPAIR = "REPAIR",
+  SCAVENGE = "SCAVENGE",
   SUICIDE = "SUICIDE",
   UPGRADE = "UPGRADE"
 }

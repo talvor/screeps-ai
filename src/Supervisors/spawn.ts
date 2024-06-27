@@ -23,6 +23,7 @@ class SpawnSupervisor {
   }
   runSpawner() {
     const spawns = Object.values(Game.spawns);
+
     for (const spawn of spawns) {
       if (!spawn.spawning) {
         const pendingRequests = Memory.spawnRequests.filter(request => request.spawnId === spawn.id);
@@ -44,8 +45,8 @@ class SpawnSupervisor {
           if (bodyParts.length < 3) {
             continue;
           }
-
-          if (spawn.spawnCreep(bodyParts, request.name, { dryRun: true }) === OK) {
+          const code = spawn.spawnCreep(bodyParts, request.name, { dryRun: true });
+          if (code === OK) {
             console.log(`SpawnerSupervisor: spawning ${request.name} with bodyparts ${JSON.stringify(bodyParts)}`);
             const opts: SpawnOptions = {};
             if (request.taskRequests) {
@@ -60,6 +61,8 @@ class SpawnSupervisor {
               };
             }
             spawn.spawnCreep(bodyParts, request.name, opts);
+            Memory.spawnRequests = Memory.spawnRequests.filter(r => r.name !== request.name);
+          } else if (code === ERR_NAME_EXISTS) {
             Memory.spawnRequests = Memory.spawnRequests.filter(r => r.name !== request.name);
           }
         }

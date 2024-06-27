@@ -15,6 +15,7 @@ class TransferAction extends BaseTaskAction<TransferTarget, undefined> {
 
     const id = ta.target as Id<StructureSpawn | StructureExtension>;
     const target = Game.getObjectById(id);
+
     if (!target || creep.transfer(target, RESOURCE_ENERGY) !== OK) {
       return true; // Unable to build, end task
     }

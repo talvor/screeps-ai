@@ -32,3 +32,10 @@ export const findStructuresNeedingRepair = (room: Room, repairThreshold = 0.5): 
   });
   return structures;
 };
+
+export const findContainersNearPosition = (pos: RoomPosition, distance: number): Array<StructureContainer> => {
+  const containerNearPos = pos.findInRange<FIND_STRUCTURES, StructureContainer>(FIND_STRUCTURES, distance, {
+    filter: s => s.structureType === STRUCTURE_CONTAINER
+  })[0];
+  return [containerNearPos];
+};

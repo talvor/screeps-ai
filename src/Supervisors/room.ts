@@ -1,7 +1,8 @@
 import { taskSupervisor } from "./task";
-import { findFreeSpawnsInRoom, findSpawnsToRecharge } from "Selectors/spawns";
+import { findContainerNearSpawn, findFreeSpawnsInRoom, findSpawnsToRecharge } from "Selectors/spawns";
 import {
   findConstructionSitesInRoom,
+  findContainersNearPosition,
   findExtensionsInRoom,
   findStructuresNeedingRepair,
   findTowersInRoom
@@ -10,13 +11,14 @@ import { spawnSupervisor } from "./spawn";
 import { TaskType } from "Task/task";
 import { countCreepsWithName } from "Selectors/creeps";
 import { findContainersInRoom, findSourcesInRoom } from "Selectors/room";
-import { blockSquare } from "screeps-cartographer";
 import { rechargeTask } from "Task/Tasks/recharge";
 import { buildTask } from "Task/Tasks/build";
 import { repairTask } from "Task/Tasks/repair";
 import { suicideTask } from "Task/Tasks/suicide";
 import { mineTask } from "Task/Tasks/mine";
 import { upgradeTask } from "Task/Tasks/upgrade";
+import { haulTask } from "Task/Tasks/haul";
+import { scavengeTask } from "Task/Tasks/scavenge";
 
 const WORKERS_PCL = 2; // Workers per controller level
 const TASKS_PER_TYPE_PCL = 2; // Build tasks per controller level
@@ -32,6 +34,8 @@ class RoomSupervisor {
         this.createWorkers(room);
         this.createMiners(room);
         this.createUpraders(room);
+        this.createHaulers(room);
+        this.createScavengers(room);
         // this.createRepairer(room);
 
         // Create task requests
@@ -107,43 +111,71 @@ class RoomSupervisor {
   createMiners(room: Room) {
     // Create miners
     const spawn = findFreeSpawnsInRoom(room.name);
-    const containers = findContainersInRoom(room);
-    if (containers.length > 0) {
-      for (const container of containers) {
-        if (countCreepsWithName(`Miner${container.id}`, room) === 0) {
-          const source = container.pos.findClosestByRange(FIND_SOURCES_ACTIVE);
-          if (spawn && source) {
-            blockSquare(container.pos);
-            const taskRequest = mineTask.makeRequest(source, { pos: container.pos, distance: 0 });
-            spawnSupervisor.requestNewMinion({
-              name: `Miner${container.id}`,
-              spawnId: spawn.id,
-              bodyParts: [MOVE, WORK, WORK, WORK, WORK],
-              taskRequests: [taskRequest]
-            });
-            break;
-          }
-        }
-      }
-    } else {
-      const sources = findSourcesInRoom(room);
-      for (const source of sources) {
-        if (countCreepsWithName(`Miner${source.id}`, room) === 0) {
-          if (spawn) {
-            const taskRequest = mineTask.makeRequest(source, { pos: source.pos, distance: 1 });
-            spawnSupervisor.requestNewMinion({
-              name: `Miner${source.id}`,
-              spawnId: spawn.id,
-              bodyParts: [MOVE, WORK, WORK, WORK, WORK],
-              taskRequests: [taskRequest]
-            });
-            break;
-          }
+    const sources = findSourcesInRoom(room);
+    for (const source of sources) {
+      const container = findContainersNearPosition(source.pos, 2);
+      const target = container[0] || source;
+      const distance = container[0] ? 0 : 1;
+      if (countCreepsWithName(`Miner${source.id}`, room) === 0) {
+        if (spawn) {
+          const taskRequest = mineTask.makeRequest(source, { pos: target.pos, distance: distance });
+          spawnSupervisor.requestNewMinion({
+            name: `Miner${source.id}`,
+            spawnId: spawn.id,
+            bodyParts: [MOVE, WORK, WORK, WORK, WORK],
+            taskRequests: [taskRequest]
+          });
+          break;
         }
       }
     }
   }
 
+  createHaulers(room: Room) {
+    // Create Upgraders
+    const spawn = findFreeSpawnsInRoom(room.name);
+    if (!spawn) return;
+
+    const containerNearSpawn = findContainerNearSpawn(spawn);
+    if (!containerNearSpawn) return;
+
+    const containers = findContainersInRoom(room);
+
+    for (const container of containers) {
+      if (container.id === containerNearSpawn.id) continue;
+      if (countCreepsWithName(`Hauler${container.id}`, room) === 0) {
+        if (spawn) {
+          const taskRequest = haulTask.makeRequest(container);
+          spawnSupervisor.requestNewMinion({
+            name: `Hauler${container.id}`,
+            spawnId: spawn.id,
+            bodyParts: [MOVE, CARRY, CARRY, MOVE, CARRY],
+            taskRequests: [taskRequest]
+          });
+          break;
+        }
+      }
+    }
+  }
+
+  createScavengers(room: Room) {
+    const spawn = findFreeSpawnsInRoom(room.name);
+    if (!spawn) return;
+    const containerNearSpawn = findContainerNearSpawn(spawn);
+    if (!containerNearSpawn) return;
+
+    // Ensure we always have some workers
+    const scavengerCount = countCreepsWithName("Scavenger", room);
+    if (scavengerCount < 2) {
+      const taskRequest = scavengeTask.makeRequest(spawn);
+      spawnSupervisor.requestNewMinion({
+        name: "Scavenger" + Game.time,
+        spawnId: spawn.id,
+        bodyParts: [WORK, CARRY, MOVE, CARRY, MOVE],
+        taskRequests: [taskRequest]
+      });
+    }
+  }
   createUpraders(room: Room) {
     // Create Upgraders
     const spawn = findFreeSpawnsInRoom(room.name);

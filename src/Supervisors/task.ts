@@ -23,7 +23,7 @@ class TaskSupervisor {
       ...newTaskRequest
     };
     if (Memory.taskRequests.findIndex(tr => tr.name === newTaskRequest.name) === -1) {
-      console.log(`TaskSupervisor: scheduling task ${newTaskRequest.name}`);
+      // console.log(`TaskSupervisor: scheduling task ${newTaskRequest.name}`);
       Memory.taskRequests.push(taskRequest);
       return true;
     }
@@ -34,7 +34,7 @@ class TaskSupervisor {
   runTaskScheduler() {
     const pendingTasks = Memory.taskRequests
       .filter(tr => tr.status === "PENDING")
-      .sort((tr1, tr2) => tr2.priority - tr1.priority);
+      .sort((tr1, tr2) => tr1.priority - tr2.priority);
 
     pendingTasks.forEach(tr => {
       const creeps = Object.values(Game.creeps);
@@ -46,6 +46,7 @@ class TaskSupervisor {
           }, true);
 
           if (meets) {
+            console.log(`TaskSupervisor: task request ${tr.name} allocated to ${creep.name}`);
             creep.memory.busy = true;
             creep.memory.taskRequests ??= [];
             creep.memory.taskRequests.push(tr);
@@ -120,7 +121,6 @@ class TaskSupervisor {
       .filter(tr => tr.status === "INPROCESS")
       .forEach(tr => {
         if (tr.assignedCreep && !Game.getObjectById(tr.assignedCreep)) {
-          console.log(`TaskSupervisor: taskRequest ${tr.name} assigned creep is missing`);
           tr.assignedCreep = undefined;
           tr.status = "PENDING";
         }
