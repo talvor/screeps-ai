@@ -113,12 +113,11 @@ class RoomSupervisor {
     const spawn = findFreeSpawnsInRoom(room.name);
     const sources = findSourcesInRoom(room);
     for (const source of sources) {
-      const container = findContainersNearPosition(source.pos, 2);
-      const target = container[0] || source;
-      const distance = container[0] ? 0 : 1;
+      const container = findContainersNearPosition(source.pos, 2)[0];
+      if (!container) continue;
       if (countCreepsWithName(`Miner${source.id}`, room) === 0) {
         if (spawn) {
-          const taskRequest = mineTask.makeRequest(source, { pos: target.pos, distance: distance });
+          const taskRequest = mineTask.makeRequest(source, { pos: container.pos, distance: 0 });
           spawnSupervisor.requestNewMinion({
             name: `Miner${source.id}`,
             spawnId: spawn.id,
@@ -145,7 +144,7 @@ class RoomSupervisor {
       if (container.id === containerNearSpawn.id) continue;
       if (countCreepsWithName(`Hauler${container.id}`, room) === 0) {
         if (spawn) {
-          const taskRequest = haulTask.makeRequest(container);
+          const taskRequest = haulTask.makeRequest(container, containerNearSpawn);
           spawnSupervisor.requestNewMinion({
             name: `Hauler${container.id}`,
             spawnId: spawn.id,
@@ -167,7 +166,7 @@ class RoomSupervisor {
     // Ensure we always have some workers
     const scavengerCount = countCreepsWithName("Scavenger", room);
     if (scavengerCount < 2) {
-      const taskRequest = scavengeTask.makeRequest(spawn);
+      const taskRequest = scavengeTask.makeRequest(containerNearSpawn);
       spawnSupervisor.requestNewMinion({
         name: "Scavenger" + Game.time,
         spawnId: spawn.id,

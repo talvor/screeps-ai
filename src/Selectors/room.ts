@@ -32,3 +32,11 @@ export const findFreeSource = (creep: Creep): EnergySource | undefined => {
 
   return energySource;
 };
+
+export const findContainerNearSource = (source: Source): StructureContainer | undefined => {
+  return (
+    source.pos.findInRange<FIND_STRUCTURES, StructureContainer>(FIND_STRUCTURES, 1, {
+      filter: s => s.structureType === STRUCTURE_CONTAINER
+    })[0] || undefined
+  );
+};

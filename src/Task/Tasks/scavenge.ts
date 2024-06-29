@@ -2,17 +2,17 @@ import { BaseTask, NewTaskRequest, Task, TaskType } from "Task/task";
 import { scavengeAction } from "Task/Actions/scavenge";
 import { dropAction } from "Task/Actions/drop";
 
-class ScavengeTask extends BaseTask<StructureSpawn, undefined> {
+class ScavengeTask extends BaseTask<StructureContainer, undefined> {
   prerequisite: BodyPartConstant[] = [WORK, CARRY, MOVE];
-  make(target: StructureSpawn): Task {
+  make(target: StructureContainer): Task {
     return {
       type: TaskType.SCAVENGE,
       target: target.id,
-      actions: [scavengeAction.make(), dropAction.make(target)],
+      actions: [scavengeAction.make(), dropAction.make(target.pos)],
       currentAction: 0
     };
   }
-  makeRequest(target: StructureSpawn): NewTaskRequest {
+  makeRequest(target: StructureContainer): NewTaskRequest {
     return {
       type: TaskType.SCAVENGE,
       name: `Scavenge: ${Game.time}`,

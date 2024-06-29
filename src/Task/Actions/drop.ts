@@ -1,23 +1,14 @@
 import { BaseTaskAction, TaskAction, TaskActionType } from "Task/task";
 import { moveAction } from "./move";
-import { findContainerNearSpawn } from "Selectors/spawns";
+import { packPos } from "utils/position";
 
-class DropAction extends BaseTaskAction<StructureSpawn, undefined> {
+class DropAction extends BaseTaskAction<RoomPosition, undefined> {
   type = TaskActionType.DROP;
 
   action(creep: Creep, ta: TaskAction) {
     // If creep has no energy end task;
     if (creep.store.getUsedCapacity() === 0) return true;
 
-    const id = ta.target as Id<StructureSpawn>;
-    const spawn = Game.getObjectById(id);
-    if (!ta.moveAction && spawn) {
-      const target = findContainerNearSpawn(spawn);
-      if (!target) return true;
-
-      ta.moveAction = moveAction.make(target.pos);
-    }
-    // Move to location and continue only when we are there
     if (ta.moveAction && !moveAction.action(creep, ta.moveAction)) return false;
 
     if (creep.drop(RESOURCE_ENERGY) !== OK) {
@@ -27,10 +18,11 @@ class DropAction extends BaseTaskAction<StructureSpawn, undefined> {
     return false; // Task is not complete
   }
 
-  make(target: StructureSpawn) {
+  make(target: RoomPosition) {
     return {
       type: this.type,
-      target: target.id
+      target: packPos(target),
+      moveAction: moveAction.make(target, 0)
     };
   }
 }
