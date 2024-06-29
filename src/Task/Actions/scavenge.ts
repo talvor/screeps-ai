@@ -4,7 +4,7 @@ import { TaskAction, TaskActionType, BaseTaskAction } from "Task/Actions/task-ac
 type HarvestTarget = StructureContainer | Resource | Source | Ruin;
 
 class ScavengeAction extends BaseTaskAction<undefined, undefined> {
-  type = TaskActionType.HARVEST;
+  type = TaskActionType.SCAVENGE;
 
   action(creep: Creep, ta: TaskAction) {
     let target: HarvestTarget | null;
@@ -23,6 +23,7 @@ class ScavengeAction extends BaseTaskAction<undefined, undefined> {
         creep.moveTo(target);
         return false;
       }
+      ta.target = undefined;
     }
 
     let code;
@@ -43,12 +44,8 @@ class ScavengeAction extends BaseTaskAction<undefined, undefined> {
     if (code !== OK) {
       return true; // Unable to harvest, end task
     }
-    const full = creep.store.getFreeCapacity() === 0; // Task is not complete if creep still has capacity
-    if (full) {
-      ta.target = undefined;
-    }
 
-    return full;
+    return false;
   }
 
   tryHarvest(creep: Creep, target: Id<Source>): number {

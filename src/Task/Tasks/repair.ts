@@ -28,7 +28,6 @@ class RepairTask extends BaseTask<Structure, undefined> {
     const targetId = task.target as Id<Structure>;
     const target = Game.getObjectById(targetId);
     if (target) {
-      console.log(`RepairTask: shouldRepeatTask ${target.hits}:${target.hitsMax}`);
       return target.hitsMax !== target.hits;
     }
     return false;

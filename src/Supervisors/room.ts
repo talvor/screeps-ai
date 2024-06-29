@@ -35,12 +35,11 @@ class RoomSupervisor {
         this.createMiners(room);
         this.createUpraders(room);
         this.createHaulers(room);
-        // this.createScavengers(room);
+        this.createScavengers(room);
         this.createRepairer(room);
 
         // Create task requests
         this.createBuildRequests(room, controller);
-        // this.createRepairRequests(room);
 
         // Create recharge task for extensions that need energy
         findExtensionsInRoom(room, extension => {
@@ -93,11 +92,12 @@ class RoomSupervisor {
   }
 
   createRepairer(room: Room) {
+    const REPAIR_TASK_COUNT = 5;
     const spawn = findFreeSpawnsInRoom(room.name);
     if (countCreepsWithName("Repairer", room) === 0) {
       const repairStructures = findStructuresNeedingRepair(room, 0.9);
       if (spawn && repairStructures.length > 0) {
-        const structures = repairStructures.splice(0, 10);
+        const structures = repairStructures.splice(0, REPAIR_TASK_COUNT);
         const taskRequests = structures.map(s => repairTask.makeRequest(s));
         taskRequests.push(suicideTask.makeRequest());
         spawnSupervisor.requestNewMinion({
@@ -154,21 +154,20 @@ class RoomSupervisor {
     const containerNearSpawn = findContainerNearSpawn(spawn);
     if (!containerNearSpawn) return;
 
-    const containers = findContainersInRoom(room);
+    const sources = findSourcesInRoom(room);
+    for (const source of sources) {
+      const container = findContainersNearPosition(source.pos, 2)[0];
+      if (!container) continue;
 
-    for (const container of containers) {
-      if (container.id === containerNearSpawn.id) continue;
       if (countCreepsWithName(`Hauler${container.id}`, room) === 0) {
-        if (spawn) {
-          const taskRequest = haulTask.makeRequest(container, containerNearSpawn);
-          spawnSupervisor.requestNewMinion({
-            name: `Hauler${container.id}`,
-            spawnId: spawn.id,
-            bodyParts: [MOVE, CARRY, CARRY, MOVE, CARRY],
-            taskRequests: [taskRequest]
-          });
-          break;
-        }
+        const taskRequest = haulTask.makeRequest(container, containerNearSpawn);
+        spawnSupervisor.requestNewMinion({
+          name: `Hauler${container.id}`,
+          spawnId: spawn.id,
+          bodyParts: [MOVE, CARRY, CARRY, MOVE, CARRY],
+          taskRequests: [taskRequest]
+        });
+        break;
       }
     }
   }
@@ -181,8 +180,8 @@ class RoomSupervisor {
 
     // Ensure we always have some workers
     const scavengerCount = countCreepsWithName("Scavenger", room);
-    if (scavengerCount < 2) {
-      const taskRequest = scavengeTask.makeRequest(containerNearSpawn);
+    if (scavengerCount < 1) {
+      const taskRequest = scavengeTask.makeRequest(room);
       spawnSupervisor.requestNewMinion({
         name: "Scavenger" + Game.time,
         spawnId: spawn.id,

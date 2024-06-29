@@ -1,4 +1,4 @@
-import { TaskAction } from "Task/Actions/task-action";
+import { TaskAction, TaskActionEmoji } from "Task/Actions/task-action";
 import { getTaskActionHander } from "Task/Actions/utils";
 
 export enum TaskType {
@@ -49,12 +49,7 @@ export abstract class BaseTask<Target, Params> {
 
     if (actionHandler.type !== creep.memory.currentActionName) {
       creep.memory.currentActionName = actionHandler.type;
-      if (creep.id === "667ff86ce1cb6c9ef766cef9") {
-        creep.say(`${creep.memory.currentTaskName}:${creep.memory.currentActionName}`);
-      }
-    }
-    if (creep.id === "667ff86ce1cb6c9ef766cef9") {
-      creep.say(`${creep.memory.currentTaskName}:${creep.memory.currentActionName}`);
+      creep.say(`${creep.memory.currentTaskName}:${TaskActionEmoji[actionHandler.type]}`);
     }
     if (actionHandler.action(creep, action)) {
       task.currentAction++;

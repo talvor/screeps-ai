@@ -62,3 +62,20 @@ export const findClosestFreeSource = (creep: Creep): EnergySource | undefined =>
 
   return undefined;
 };
+
+export const findClosestDepositStructure = (
+  creep: Creep,
+  filterFn?: (s: StructureContainer) => boolean
+): StructureContainer | undefined => {
+  // Find dropped resources
+  const structure = creep.pos.findClosestByPath<StructureContainer>(FIND_STRUCTURES, {
+    filter: s => {
+      if (s.structureType !== STRUCTURE_CONTAINER) return false;
+      if (filterFn) return filterFn(s);
+      return true;
+    }
+  });
+
+  if (structure) return structure;
+  return undefined;
+};

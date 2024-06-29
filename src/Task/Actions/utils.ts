@@ -10,6 +10,7 @@ import { transferAction } from "./transfer";
 import { upgradeAction } from "./upgrade";
 import { withdrawAction } from "./withdraw";
 import { TaskAction, TaskActionType, BaseTaskAction } from "./task-action";
+import { depositAction } from "./deposit";
 
 export const getTaskActionHander = (ta: TaskAction): BaseTaskAction<unknown, unknown> => {
   switch (ta.type) {
@@ -45,6 +46,9 @@ export const getTaskActionHander = (ta: TaskAction): BaseTaskAction<unknown, unk
 
     case TaskActionType.SCAVENGE:
       return scavengeAction;
+
+    case TaskActionType.DEPOSIT:
+      return depositAction;
 
     default:
       throw new Error(`TaskAction handler for ${ta.type} not found`);

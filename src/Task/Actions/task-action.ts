@@ -7,6 +7,7 @@ export interface TaskAction {
 
 export enum TaskActionType {
   BUILD = "BUILD",
+  DEPOSIT = "DEPOSIT",
   DROP = "DROP",
   HARVEST = "HARVEST",
   MINE = "MINE",
@@ -18,6 +19,22 @@ export enum TaskActionType {
   SUICIDE = "SUICIDE",
   WITHDRAW = "WITHDRAW"
 }
+
+type EmojiRecord = Record<keyof typeof TaskActionType, any>;
+export const TaskActionEmoji: EmojiRecord = {
+  BUILD: "🛠️",
+  DEPOSIT: "⬇️",
+  DROP: "⬇️",
+  SCAVENGE: "♻️",
+  HARVEST: "⛏️",
+  MINE: "⛏️",
+  MOVE: "🚶",
+  TRANSFER: "🚚",
+  UPGRADE: "🔧",
+  REPAIR: "🪛",
+  SUICIDE: "☠️",
+  WITHDRAW: "⬆️"
+};
 
 export abstract class BaseTaskAction<Target, Params> {
   abstract type: TaskActionType;

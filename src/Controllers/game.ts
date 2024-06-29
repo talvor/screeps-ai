@@ -27,7 +27,7 @@ class GameController {
         { name: "runCreepTasks", fn: taskSupervisor.runCreepTasks.bind(taskSupervisor), mandatory: true },
         { name: "cleanUpTasks", fn: taskSupervisor.cleanUpTasks.bind(taskSupervisor), mandatory: true },
         { name: "runSpawner", fn: spawnSupervisor.runSpawner.bind(spawnSupervisor), runEvery: 10 },
-        { name: "runCreepSupervisor", fn: creepSupervisor.runSupervisor.bind(creepSupervisor), runEvery: 10 },
+        { name: "runCreepSupervisor", fn: creepSupervisor.runSupervisor.bind(creepSupervisor), runEvery: 5 },
         { name: "planRooms", fn: planningSupervisor.planRooms.bind(planningSupervisor.planRooms), threshold: 5000 },
         { name: "reconcileTraffic", fn: reconcileTraffic, mandatory: true }, // must run after missions
         { name: "cleanUpCreeps", fn: cleanUpCreeps, runEvery: 1000 }

@@ -1,10 +1,9 @@
 import { TaskAction, TaskActionType, BaseTaskAction } from "Task/Actions/task-action";
 
 class SuicideAction extends BaseTaskAction<undefined, undefined> {
-  type = TaskActionType.MOVE;
+  type = TaskActionType.SUICIDE;
 
   action(creep: Creep, _ta: TaskAction) {
-    console.log(`SuicideAction: ${creep.name}`);
     creep.suicide();
     return true;
   }
