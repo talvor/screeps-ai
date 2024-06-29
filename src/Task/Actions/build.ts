@@ -43,9 +43,9 @@ class BuildAction extends BaseTaskAction<ConstructionSite, undefined> {
   shouldRepeatAction(_creep: Creep, ta: TaskAction): boolean {
     const id = ta.target as Id<ConstructionSite>;
     const constructionSite = Game.getObjectById(id);
-    if (!constructionSite) return true;
+    if (!constructionSite) return false;
 
-    return constructionSite.progress === constructionSite.progressTotal;
+    return constructionSite.progress !== constructionSite.progressTotal;
   }
 }
 
