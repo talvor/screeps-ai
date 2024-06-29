@@ -1,4 +1,4 @@
-import { BaseTaskAction, TaskAction, TaskActionEmoji, TaskActionType } from "Task/task";
+import { TaskAction, TaskActionType, BaseTaskAction } from "Task/Actions/task-action";
 import { moveAction } from "./move";
 
 class RepairAction extends BaseTaskAction<Structure, undefined> {
@@ -10,7 +10,6 @@ class RepairAction extends BaseTaskAction<Structure, undefined> {
 
     // If creep has no energy end task;
     if (creep.store.getUsedCapacity() === 0) return true;
-    creep.say(`${TaskActionEmoji[ta.type]} ${ta.type}`);
 
     const targetId = ta.target as Id<Structure>;
     const target = Game.getObjectById(targetId);
@@ -19,10 +18,8 @@ class RepairAction extends BaseTaskAction<Structure, undefined> {
       return true;
     }
     const code = creep.repair(target);
-    console.log(`RepairAction: code=${code} target=${target.structureType} id=${targetId}`);
     if (code == OK) {
       return target.hitsMax === target.hits;
-      // return true; // Unable to harvest, end task
     }
     return false; // Task is not complete
   }

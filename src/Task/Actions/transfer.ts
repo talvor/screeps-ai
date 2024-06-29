@@ -1,4 +1,4 @@
-import { BaseTaskAction, TaskAction, TaskActionType } from "Task/task";
+import { TaskAction, TaskActionType, BaseTaskAction } from "Task/Actions/task-action";
 import { moveAction } from "./move";
 
 export type TransferTarget = StructureSpawn | StructureExtension | StructureTower;
@@ -15,11 +15,12 @@ class TransferAction extends BaseTaskAction<TransferTarget, undefined> {
 
     const id = ta.target as Id<StructureSpawn | StructureExtension>;
     const target = Game.getObjectById(id);
-
-    if (!target || creep.transfer(target, RESOURCE_ENERGY) !== OK) {
+    if (!target) return true;
+    const code = creep.transfer(target, RESOURCE_ENERGY);
+    if (code !== OK) {
       return true; // Unable to build, end task
     }
-    return false; // Task is not complete
+    return target.store.getFreeCapacity(RESOURCE_ENERGY) === 0; // Task complete when target is full
   }
   cost(creep: Creep, ta: TaskAction) {
     const id = ta.target as Id<TransferTarget>;

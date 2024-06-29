@@ -1,5 +1,5 @@
 import { findClosestFreeSource } from "Selectors/creeps";
-import { BaseTaskAction, TaskAction, TaskActionType } from "Task/task";
+import { TaskAction, TaskActionType, BaseTaskAction } from "Task/Actions/task-action";
 
 type HarvestTarget = StructureContainer | Resource | Source | Ruin;
 

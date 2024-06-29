@@ -1,5 +1,5 @@
 import { suicideAction } from "Task/Actions/suicide";
-import { BaseTask, NewTaskRequest, Task, TaskType } from "Task/task";
+import { BaseTask, NewTaskRequest, Task, TaskType } from "Task/Tasks/task";
 
 class SuicideTask extends BaseTask<undefined, undefined> {
   prerequisite: BodyPartConstant[] = [];

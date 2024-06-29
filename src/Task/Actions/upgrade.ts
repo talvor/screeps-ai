@@ -1,5 +1,6 @@
-import { BaseTaskAction, Task, TaskAction, TaskActionType } from "Task/task";
+import { TaskAction, TaskActionType, BaseTaskAction } from "Task/Actions/task-action";
 import { moveAction } from "./move";
+import { Task } from "Task/Tasks/task";
 
 class UpgradeAction extends BaseTaskAction<StructureController, undefined> {
   type = TaskActionType.UPGRADE;

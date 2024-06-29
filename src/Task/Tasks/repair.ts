@@ -1,6 +1,6 @@
 import { harvestAction } from "Task/Actions/harvest";
 import { repairAction } from "Task/Actions/repair";
-import { BaseTask, Task, NewTaskRequest, TaskType } from "Task/task";
+import { BaseTask, NewTaskRequest, Task, TaskType } from "Task/Tasks/task";
 
 class RepairTask extends BaseTask<Structure, undefined> {
   prerequisite: BodyPartConstant[] = [WORK, MOVE, CARRY];
@@ -22,6 +22,16 @@ class RepairTask extends BaseTask<Structure, undefined> {
       priority: 1,
       repeatable: false
     };
+  }
+
+  shouldRepeatTask(_creep: Creep, task: Task): boolean {
+    const targetId = task.target as Id<Structure>;
+    const target = Game.getObjectById(targetId);
+    if (target) {
+      console.log(`RepairTask: shouldRepeatTask ${target.hits}:${target.hitsMax}`);
+      return target.hitsMax !== target.hits;
+    }
+    return false;
   }
 }
 

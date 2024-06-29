@@ -1,4 +1,4 @@
-import { BaseTask, NewTaskRequest, Task, TaskType } from "Task/task";
+import { BaseTask, NewTaskRequest, Task, TaskType } from "Task/Tasks/task";
 import { TransferTarget, transferAction } from "Task/Actions/transfer";
 import { harvestAction } from "Task/Actions/harvest";
 

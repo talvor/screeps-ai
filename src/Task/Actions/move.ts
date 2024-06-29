@@ -1,4 +1,4 @@
-import { BaseTaskAction, TaskAction, TaskActionType } from "Task/task";
+import { TaskAction, TaskActionType, BaseTaskAction } from "Task/Actions/task-action";
 import { moveTo } from "screeps-cartographer";
 import { packPos, unpackPos } from "utils/position";
 
@@ -6,27 +6,34 @@ class MoveAction extends BaseTaskAction<RoomPosition, number> {
   type = TaskActionType.MOVE;
 
   action(creep: Creep, ta: TaskAction) {
-    const { target, distance } = this.decodeTA(ta);
-    if (creep.pos.inRangeTo(target, distance)) return true;
+    try {
+      const { target, distance } = this.decodeTA(ta);
+      if (!target) return true;
 
-    const opts: MoveToOpts = {};
-    opts.visualizePathStyle = { stroke: "#ffaa00", opacity: 0.5, lineStyle: "dotted" };
-    let result: number = moveTo(creep, target, opts);
+      if (creep.pos.inRangeTo(target, distance)) return true;
 
-    // There is an issue with the screeps-cartographer version of moveTo
-    // It has difficulty moving onto an exact location if distance is 0
-    // so fallback to creep.moveTo
-    if (result === OK && distance === 0) {
-      result = creep.moveTo(target);
+      const opts: MoveToOpts = {};
+      opts.visualizePathStyle = { stroke: "#ffaa00", opacity: 0.5, lineStyle: "dotted" };
+      let result: number = moveTo(creep, target, opts);
+
+      // There is an issue with the screeps-cartographer version of moveTo
+      // It has difficulty moving onto an exact location if distance is 0
+      // so fallback to creep.moveTo
+      if (result === OK && distance === 0) {
+        result = creep.moveTo(target);
+      }
+      if (
+        result === ERR_NO_PATH ||
+        result === ERR_NOT_OWNER ||
+        result === ERR_NO_BODYPART // ||
+        // result === ERR_INVALID_TARGET
+      )
+        return true; // Unrecoverable error
+      return creep.pos.inRangeTo(target, distance);
+    } catch (err) {
+      console.log(err);
+      return true;
     }
-    if (
-      result === ERR_NO_PATH ||
-      result === ERR_NOT_OWNER ||
-      result === ERR_NO_BODYPART // ||
-      // result === ERR_INVALID_TARGET
-    )
-      return true; // Unrecoverable error
-    return creep.pos.inRangeTo(target, distance);
   }
   make(target: RoomPosition, distance = 0): TaskAction {
     return {

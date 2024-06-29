@@ -1,44 +1,11 @@
-import { getTaskActionHander } from "./utils";
-
-export enum TaskActionType {
-  BUILD = "BUILD",
-  DROP = "DROP",
-  HARVEST = "HARVEST",
-  MINE = "MINE",
-  MOVE = "MOVE",
-  TRANSFER = "TRANSFER",
-  UPGRADE = "UPGRADE",
-  REPAIR = "REPAIR",
-  SCAVENGE = "SCAVENGE",
-  SUICIDE = "SUICIDE",
-  WITHDRAW = "WITHDRAW"
-}
-type EmojiRecord = Record<keyof typeof TaskActionType, any>;
-export const TaskActionEmoji: EmojiRecord = {
-  BUILD: "🛠️",
-  DROP: "",
-  SCAVENGE: "",
-  HARVEST: "⛏️",
-  MINE: "⛏️",
-  MOVE: "🚶",
-  TRANSFER: "🔀",
-  UPGRADE: "⬆️",
-  REPAIR: "🪛",
-  SUICIDE: "💀",
-  WITHDRAW: ""
-};
-
-export interface TaskAction {
-  type: TaskActionType;
-  target: Id<_HasId> | string | undefined;
-  params?: Record<string, unknown>;
-  moveAction?: TaskAction;
-}
+import { TaskAction } from "Task/Actions/task-action";
+import { getTaskActionHander } from "Task/Actions/utils";
 
 export enum TaskType {
   BUILD = "BUILD",
   HAUL = "HAUL",
   MINE = "MINE",
+  RALLY = "RALLY",
   RECHARGE = "RECHARGE",
   REPAIR = "REPAIR",
   SCAVENGE = "SCAVENGE",
@@ -79,6 +46,16 @@ export abstract class BaseTask<Target, Params> {
 
     const action = task.actions[task.currentAction];
     const actionHandler = getTaskActionHander(action);
+
+    if (actionHandler.type !== creep.memory.currentActionName) {
+      creep.memory.currentActionName = actionHandler.type;
+      if (creep.id === "667ff86ce1cb6c9ef766cef9") {
+        creep.say(`${creep.memory.currentTaskName}:${creep.memory.currentActionName}`);
+      }
+    }
+    if (creep.id === "667ff86ce1cb6c9ef766cef9") {
+      creep.say(`${creep.memory.currentTaskName}:${creep.memory.currentActionName}`);
+    }
     if (actionHandler.action(creep, action)) {
       task.currentAction++;
     }
@@ -102,18 +79,7 @@ export abstract class BaseTask<Target, Params> {
     }, true);
   }
 
-  shouldRepeatTask(_creep: Creep, _task: Task): boolean {
-    return false;
-  }
-}
-
-export abstract class BaseTaskAction<Target, Params> {
-  abstract type: TaskActionType;
-  abstract action(creep: Creep, taskAction: TaskAction): boolean;
-
-  abstract make(_target: Target, _params?: Params): TaskAction;
-
-  shouldRepeatAction(_creep: Creep, _ta: TaskAction): boolean {
+  shouldRepeatTask(_creep: Creep, task: Task): boolean {
     return false;
   }
 }

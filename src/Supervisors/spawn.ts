@@ -1,4 +1,4 @@
-import { NewTaskRequest } from "Task/task";
+import { NewTaskRequest } from "Task/Tasks/task";
 import { uuid } from "utils/uuid";
 
 declare global {

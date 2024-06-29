@@ -1,6 +1,6 @@
 import { harvestAction } from "Task/Actions/harvest";
 import { buildAction } from "Task/Actions/build";
-import { BaseTask, NewTaskRequest, Task, TaskType } from "Task/task";
+import { BaseTask, NewTaskRequest, Task, TaskType } from "Task/Tasks/task";
 
 class BuildTask extends BaseTask<ConstructionSite, undefined> {
   prerequisite: BodyPartConstant[] = [MOVE, CARRY, WORK];
@@ -17,7 +17,7 @@ class BuildTask extends BaseTask<ConstructionSite, undefined> {
   makeRequest(target: ConstructionSite): NewTaskRequest {
     return {
       type: TaskType.BUILD,
-      name: `Build: ${target.id} `,
+      name: `Build: ${target.id}_${Game.time}`,
       tasks: [this.make(target)],
       roomName: target.room?.name || "unknown",
       priority: 10,

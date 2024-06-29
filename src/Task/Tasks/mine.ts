@@ -1,4 +1,4 @@
-import { BaseTask, NewTaskRequest, Task, TaskType } from "Task/task";
+import { BaseTask, NewTaskRequest, Task, TaskType } from "Task/Tasks/task";
 import { MineActionParams, mineAction } from "Task/Actions/mine";
 
 class MineTask extends BaseTask<Source, MineActionParams> {

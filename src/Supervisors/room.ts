@@ -8,7 +8,7 @@ import {
   findTowersInRoom
 } from "Selectors/structure";
 import { spawnSupervisor } from "./spawn";
-import { TaskType } from "Task/task";
+import { TaskType } from "Task/Tasks/task";
 import { countCreepsWithName } from "Selectors/creeps";
 import { findContainersInRoom, findSourcesInRoom } from "Selectors/room";
 import { rechargeTask } from "Task/Tasks/recharge";
@@ -20,9 +20,9 @@ import { upgradeTask } from "Task/Tasks/upgrade";
 import { haulTask } from "Task/Tasks/haul";
 import { scavengeTask } from "Task/Tasks/scavenge";
 
-const WORKERS_PCL = 2; // Workers per controller level
-const TASKS_PER_TYPE_PCL = 2; // Build tasks per controller level
-const UPGRADERS_PCL = 2;
+const WORKERS_PCL = 4; // Workers per controller level
+const TASKS_PER_TYPE_PCL = 3; // Build tasks per controller level
+const UPGRADERS_PCL = 1;
 
 class RoomSupervisor {
   runRoom() {
@@ -35,8 +35,8 @@ class RoomSupervisor {
         this.createMiners(room);
         this.createUpraders(room);
         this.createHaulers(room);
-        this.createScavengers(room);
-        // this.createRepairer(room);
+        // this.createScavengers(room);
+        this.createRepairer(room);
 
         // Create task requests
         this.createBuildRequests(room, controller);
@@ -53,9 +53,15 @@ class RoomSupervisor {
         }).forEach(tower => taskSupervisor.requestNewTask(rechargeTask.makeRequest(tower)));
       }
 
-      const repairStructures = findStructuresNeedingRepair(room, 0.9);
-      if (repairStructures.length > 0) {
-        // console.log(repairStructures.length);
+      if (taskSupervisor.findRequests(room).length === 0 && room.controller) {
+        // There are no tasks for the workers, so lets create an upgrade task each
+        const workerCount = countCreepsWithName("Worker", room);
+        console.log(`Creating ${workerCount} upgrade tasks`);
+        for (let index = 0; index < workerCount; index++) {
+          const upgradeRequest = upgradeTask.makeRequest(room.controller);
+          upgradeRequest.repeatable = false;
+          taskSupervisor.requestNewTask(upgradeRequest);
+        }
       }
     }
 
@@ -64,14 +70,24 @@ class RoomSupervisor {
   }
 
   createBuildRequests(room: Room, controller: StructureController) {
+    const TASKS_PER_CONSTRUCTION_SITE = 3;
     // Create a build task for each construction site in the room
     const buildRequests = taskSupervisor.findRequests(room, request => {
       return request.type === TaskType.BUILD;
     });
 
     if (buildRequests.length < controller.level * TASKS_PER_TYPE_PCL) {
-      for (const cs of findConstructionSitesInRoom(room)) {
-        if (taskSupervisor.requestNewTask(buildTask.makeRequest(cs))) break;
+      const constructionSites = findConstructionSitesInRoom(room).sort((a, b) => {
+        return b.progress - a.progress;
+      });
+      for (const cs of constructionSites) {
+        const requestCount = taskSupervisor.findRequests(
+          room,
+          tr => tr.type === TaskType.BUILD && tr.name.includes(cs.id)
+        );
+        if (requestCount.length < TASKS_PER_CONSTRUCTION_SITE) {
+          if (taskSupervisor.requestNewTask(buildTask.makeRequest(cs))) break;
+        }
       }
     }
   }
@@ -81,7 +97,7 @@ class RoomSupervisor {
     if (countCreepsWithName("Repairer", room) === 0) {
       const repairStructures = findStructuresNeedingRepair(room, 0.9);
       if (spawn && repairStructures.length > 0) {
-        const structures = repairStructures.splice(0, 4);
+        const structures = repairStructures.splice(0, 10);
         const taskRequests = structures.map(s => repairTask.makeRequest(s));
         taskRequests.push(suicideTask.makeRequest());
         spawnSupervisor.requestNewMinion({
@@ -180,7 +196,7 @@ class RoomSupervisor {
     const spawn = findFreeSpawnsInRoom(room.name);
     const controller = room.controller;
     const upgraderCount = countCreepsWithName("Upgrader", room);
-    if (controller && upgraderCount < controller.level * UPGRADERS_PCL) {
+    if (controller && upgraderCount < Math.max(2, controller.level * UPGRADERS_PCL)) {
       const taskRequest = upgradeTask.makeRequest(controller);
       if (spawn) {
         spawnSupervisor.requestNewMinion({

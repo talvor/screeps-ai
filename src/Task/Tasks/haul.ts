@@ -1,4 +1,4 @@
-import { BaseTask, NewTaskRequest, Task, TaskType } from "Task/task";
+import { BaseTask, NewTaskRequest, Task, TaskType } from "Task/Tasks/task";
 import { dropAction } from "Task/Actions/drop";
 import { withdrawAction } from "Task/Actions/withdraw";
 

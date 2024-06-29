@@ -1,4 +1,4 @@
-import { BaseTaskAction, TaskAction, TaskActionType } from "Task/task";
+import { TaskAction, TaskActionType, BaseTaskAction } from "Task/Actions/task-action";
 import { moveAction } from "./move";
 import { packPos } from "utils/position";
 

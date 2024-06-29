@@ -1,7 +1,6 @@
 import { findBusyCreeps } from "Selectors/creeps";
-import { NewTaskRequest } from "Task/task";
-import { TaskRequest } from "Task/task";
-import { getTaskHandler } from "Task/utils";
+import { NewTaskRequest, TaskRequest } from "Task/Tasks/task";
+import { getTaskHandler } from "Task/Tasks/utils";
 import { uuid } from "utils/uuid";
 
 declare global {
@@ -11,6 +10,8 @@ declare global {
 
   interface CreepMemory {
     taskRequests?: Array<TaskRequest>;
+    currentTaskName?: string;
+    currentActionName?: string;
   }
 }
 class TaskSupervisor {
@@ -52,6 +53,7 @@ class TaskSupervisor {
             creep.memory.taskRequests.push(tr);
             tr.assignedCreep = creep.id;
             tr.status = "INPROCESS";
+            break;
           }
         }
       }
@@ -62,19 +64,24 @@ class TaskSupervisor {
     const busyCreeps = findBusyCreeps();
     for (const creep of busyCreeps) {
       creep.memory.taskRequests ??= [];
+      creep.memory.taskRequests = creep.memory.taskRequests?.filter(tr => tr.status !== "COMPLETE");
+
       const taskRequest = creep.memory.taskRequests[0];
       if (!taskRequest) {
         creep.memory.busy = false;
-        return;
+        continue;
       }
 
-      if (taskRequest.status === "COMPLETE") continue;
       if (taskRequest.status === "PENDING") taskRequest.status = "INPROCESS";
 
       if (taskRequest.tasks.length === 0) {
         // No tasks left, so complete the request
         this.completeTaskRequest(creep, taskRequest);
         continue;
+      }
+
+      if (taskRequest.type !== creep.memory.currentTaskName) {
+        creep.memory.currentTaskName = taskRequest.type;
       }
 
       if (taskRequest.currentTask >= taskRequest.tasks.length) {
@@ -101,8 +108,6 @@ class TaskSupervisor {
   completeTaskRequest(creep: Creep, taskRequest: TaskRequest) {
     taskRequest.status === "COMPLETE";
     taskRequest.assignedCreep = undefined;
-
-    creep.memory.busy = false;
     creep.memory.taskRequests = creep.memory.taskRequests?.filter(tr => tr.id !== taskRequest.id);
     this.syncTaskRequest(taskRequest);
   }

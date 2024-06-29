@@ -8,6 +8,10 @@ export const findBusyCreeps = (): Array<Creep> => {
   return Object.values(Game.creeps).filter(creep => creep.memory.busy);
 };
 
+export const findIdleCreeps = (): Array<Creep> => {
+  return Object.values(Game.creeps).filter(creep => !creep.memory.busy);
+};
+
 export const countCreepsWithName = (name: string, room: Room): number => {
   const activeCount = Object.values(Game.creeps).filter(
     creep => creep.room.name === room.name && creep.name.startsWith(name)
@@ -36,7 +40,9 @@ export const findClosestEnergySource = (creep: Creep): EnergySource | undefined 
   // Find containers
   const container = creep.pos.findClosestByPath(FIND_STRUCTURES, {
     filter: s => {
-      return s.structureType === STRUCTURE_CONTAINER && s.store.getUsedCapacity(RESOURCE_ENERGY) > 0;
+      return (
+        s.structureType === STRUCTURE_CONTAINER && s.store.getUsedCapacity(RESOURCE_ENERGY) > creep.store.getCapacity()
+      );
     }
   });
   if (container) return container as StructureContainer;
