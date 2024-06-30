@@ -14,6 +14,10 @@ export const findContainersInRoom = (room: Room): Array<StructureContainer> => {
   return room.find(FIND_STRUCTURES, { filter: s => s.structureType === STRUCTURE_CONTAINER });
 };
 
+export const findTowersInRoom = (room: Room): Array<StructureTower> => {
+  return room.find(FIND_MY_STRUCTURES, { filter: s => s.structureType === STRUCTURE_TOWER });
+};
+
 export type EnergySource = Resource | Ruin;
 
 export const findFreeSource = (creep: Creep): EnergySource | undefined => {

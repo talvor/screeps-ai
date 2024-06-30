@@ -2,9 +2,11 @@ import { BaseTask, NewTaskRequest, Task, TaskType } from "Task/Tasks/task";
 import { dropAction } from "Task/Actions/drop";
 import { withdrawAction } from "Task/Actions/withdraw";
 
-class HaulTask extends BaseTask<StructureContainer, StructureContainer> {
+type DestinationStructure = StructureStorage | StructureContainer;
+
+class HaulTask extends BaseTask<StructureContainer, DestinationStructure> {
   prerequisite: BodyPartConstant[] = [CARRY, MOVE];
-  make(target: StructureContainer, destination: StructureContainer): Task {
+  make(target: StructureContainer, destination: DestinationStructure): Task {
     return {
       type: TaskType.HAUL,
       target: target.id,
@@ -12,7 +14,7 @@ class HaulTask extends BaseTask<StructureContainer, StructureContainer> {
       currentAction: 0
     };
   }
-  makeRequest(target: StructureContainer, destination: StructureContainer): NewTaskRequest {
+  makeRequest(target: StructureContainer, destination: DestinationStructure): NewTaskRequest {
     return {
       type: TaskType.HAUL,
       name: `Haul: ${target.id}`,

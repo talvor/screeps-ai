@@ -1,3 +1,4 @@
+import { healthRatio } from "utils/heath-ratio";
 import { findSpawnsInRoom } from "./spawns";
 
 export const findCreepsInRoom = (roomName: string): Array<Creep> => {
@@ -78,4 +79,27 @@ export const findClosestDepositStructure = (
 
   if (structure) return structure;
   return undefined;
+};
+
+const _lowHealthCreeps: { [key: string]: Creep[] } = {};
+export const findLowHealthCreeps = (room: Room | RoomPosition | string, healthThreshold = 0.5): Creep | undefined => {
+  // accept Room Object, RoomPosition Object, String
+  const roomName = (room as Room).name || (room as RoomPosition).roomName || (room as string);
+  room = Game.rooms[roomName];
+
+  if (!_lowHealthCreeps[roomName] || _lowHealthCreeps[roomName].length === 0) {
+    const lowHealthCreeps = room.find(FIND_CREEPS, {
+      filter: (c: Creep) => {
+        if (!c.hits || !c.hitsMax) return false;
+
+        const ratio = healthRatio(c.hits, c.hitsMax);
+        return ratio < healthThreshold;
+      }
+    });
+    _lowHealthCreeps[roomName] = lowHealthCreeps;
+  }
+
+  if (!_lowHealthCreeps[roomName] || _lowHealthCreeps[roomName].length === 0) return;
+  _lowHealthCreeps[roomName].sort((a, b) => healthRatio(a.hits, b.hitsMax) - healthRatio(b.hits, b.hitsMax));
+  return _lowHealthCreeps[roomName].pop();
 };

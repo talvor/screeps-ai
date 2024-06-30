@@ -17,3 +17,11 @@ export const findContainerNearSpawn = (spawn: StructureSpawn): StructureContaine
     })[0] || undefined
   );
 };
+
+export const findStorageNearSpawn = (spawn: StructureSpawn): StructureStorage | undefined => {
+  return (
+    spawn.pos.findInRange<FIND_STRUCTURES, StructureStorage>(FIND_STRUCTURES, 3, {
+      filter: s => s.structureType === STRUCTURE_STORAGE
+    })[0] || undefined
+  );
+};

@@ -1,5 +1,10 @@
 import { taskSupervisor } from "./task";
-import { findContainerNearSpawn, findFreeSpawnsInRoom, findSpawnsToRecharge } from "Selectors/spawns";
+import {
+  findContainerNearSpawn,
+  findFreeSpawnsInRoom,
+  findSpawnsToRecharge,
+  findStorageNearSpawn
+} from "Selectors/spawns";
 import {
   findConstructionSitesInRoom,
   findContainersNearPosition,
@@ -10,7 +15,7 @@ import {
 import { spawnSupervisor } from "./spawn";
 import { TaskType } from "Task/Tasks/task";
 import { countCreepsWithName } from "Selectors/creeps";
-import { findContainersInRoom, findSourcesInRoom } from "Selectors/room";
+import { findSourcesInRoom } from "Selectors/room";
 import { rechargeTask } from "Task/Tasks/recharge";
 import { buildTask } from "Task/Tasks/build";
 import { repairTask } from "Task/Tasks/repair";
@@ -20,7 +25,7 @@ import { upgradeTask } from "Task/Tasks/upgrade";
 import { haulTask } from "Task/Tasks/haul";
 import { scavengeTask } from "Task/Tasks/scavenge";
 
-const WORKERS_PCL = 4; // Workers per controller level
+const WORKERS_PCL = 3; // Workers per controller level
 const TASKS_PER_TYPE_PCL = 3; // Build tasks per controller level
 const UPGRADERS_PCL = 1;
 
@@ -151,8 +156,11 @@ class RoomSupervisor {
     const spawn = findFreeSpawnsInRoom(room.name);
     if (!spawn) return;
 
-    const containerNearSpawn = findContainerNearSpawn(spawn);
-    if (!containerNearSpawn) return;
+    let destination: StructureContainer | StructureStorage | undefined = findStorageNearSpawn(spawn);
+    if (!destination) {
+      destination = findContainerNearSpawn(spawn);
+    }
+    if (!destination) return;
 
     const sources = findSourcesInRoom(room);
     for (const source of sources) {
@@ -160,7 +168,7 @@ class RoomSupervisor {
       if (!container) continue;
 
       if (countCreepsWithName(`Hauler${container.id}`, room) === 0) {
-        const taskRequest = haulTask.makeRequest(container, containerNearSpawn);
+        const taskRequest = haulTask.makeRequest(container, destination);
         spawnSupervisor.requestNewMinion({
           name: `Hauler${container.id}`,
           spawnId: spawn.id,
