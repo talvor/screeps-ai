@@ -19,13 +19,12 @@ import { findSourcesInRoom } from "Selectors/room";
 import { rechargeTask } from "Task/Tasks/recharge";
 import { buildTask } from "Task/Tasks/build";
 import { repairTask } from "Task/Tasks/repair";
-import { suicideTask } from "Task/Tasks/suicide";
 import { mineTask } from "Task/Tasks/mine";
 import { upgradeTask } from "Task/Tasks/upgrade";
 import { haulTask } from "Task/Tasks/haul";
 import { scavengeTask } from "Task/Tasks/scavenge";
 
-const WORKERS_PCL = 3; // Workers per controller level
+const WORKERS_PCL = 2; // Workers per controller level
 const TASKS_PER_TYPE_PCL = 3; // Build tasks per controller level
 const UPGRADERS_PCL = 1;
 
@@ -41,7 +40,6 @@ class RoomSupervisor {
         this.createUpraders(room);
         this.createHaulers(room);
         this.createScavengers(room);
-        this.createRepairer(room);
 
         // Create task requests
         this.createBuildRequests(room, controller);
@@ -96,39 +94,6 @@ class RoomSupervisor {
     }
   }
 
-  createRepairer(room: Room) {
-    const REPAIR_TASK_COUNT = 5;
-    const spawn = findFreeSpawnsInRoom(room.name);
-    if (countCreepsWithName("Repairer", room) === 0) {
-      const repairStructures = findStructuresNeedingRepair(room, 0.9);
-      if (spawn && repairStructures.length > 0) {
-        const structures = repairStructures.splice(0, REPAIR_TASK_COUNT);
-        const taskRequests = structures.map(s => repairTask.makeRequest(s));
-        taskRequests.push(suicideTask.makeRequest());
-        spawnSupervisor.requestNewMinion({
-          name: `Repairer${Game.time}`,
-          spawnId: spawn.id,
-          bodyParts: [MOVE, CARRY, WORK, CARRY, WORK],
-          taskRequests: taskRequests
-        });
-      }
-    }
-  }
-
-  createRepairRequests(room: Room) {
-    const repairRequests = taskSupervisor.findRequests(room, request => {
-      return request.tasks[0].type === TaskType.REPAIR;
-    });
-    if (repairRequests.length < 4) {
-      for (const rs of findStructuresNeedingRepair(room, 0.9)) {
-        if (repairRequests.findIndex(r => r.tasks[0].target === rs.id) === -1) {
-          taskSupervisor.requestNewTask(repairTask.makeRequest(rs));
-          break;
-        }
-      }
-    }
-  }
-
   createMiners(room: Room) {
     // Create miners
     const spawn = findFreeSpawnsInRoom(room.name);
@@ -167,10 +132,10 @@ class RoomSupervisor {
       const container = findContainersNearPosition(source.pos, 2)[0];
       if (!container) continue;
 
-      if (countCreepsWithName(`Hauler${container.id}`, room) === 0) {
+      if (countCreepsWithName(`Hauler${container.id}`, room) < 1) {
         const taskRequest = haulTask.makeRequest(container, destination);
         spawnSupervisor.requestNewMinion({
-          name: `Hauler${container.id}`,
+          name: `Hauler${container.id}_${Game.time}`,
           spawnId: spawn.id,
           bodyParts: [MOVE, CARRY, CARRY, MOVE, CARRY],
           taskRequests: [taskRequest]

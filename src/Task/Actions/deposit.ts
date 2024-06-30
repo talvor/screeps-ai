@@ -1,8 +1,9 @@
 import { TaskAction, TaskActionType, BaseTaskAction } from "Task/Actions/task-action";
 import { findClosestDepositStructure } from "Selectors/creeps";
+import { moveAction } from "./move";
 
-type DepositTarget = StructureContainer;
-class DepositAction extends BaseTaskAction<undefined, undefined> {
+type DepositTarget = StructureContainer | StructureStorage;
+class DepositAction extends BaseTaskAction<DepositTarget | undefined, undefined> {
   type = TaskActionType.DEPOSIT;
 
   action(creep: Creep, ta: TaskAction) {
@@ -21,22 +22,26 @@ class DepositAction extends BaseTaskAction<undefined, undefined> {
     }
 
     if (target) {
-      if (!creep.pos.inRangeTo(target, 0)) {
+      const distance = target.structureType === STRUCTURE_CONTAINER ? 0 : 1;
+      if (!creep.pos.inRangeTo(target, distance)) {
         creep.moveTo(target);
         return false;
       }
-      ta.target = undefined;
     }
-    if (creep.drop(RESOURCE_ENERGY) !== OK) {
+
+    let code;
+    if (target?.structureType === STRUCTURE_CONTAINER) code = creep.drop(RESOURCE_ENERGY);
+    if (target?.structureType === STRUCTURE_STORAGE) code = creep.transfer(target, RESOURCE_ENERGY);
+    if (code !== OK) {
       return true; // Unable to build, end task
     }
 
-    return true;
+    return false;
   }
-  make() {
+  make(depositTarget: DepositTarget | undefined = undefined) {
     return {
       type: this.type,
-      target: undefined
+      target: depositTarget ? depositTarget.id : undefined
     };
   }
 }

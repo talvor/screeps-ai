@@ -27,7 +27,7 @@ export const countCreepsWithName = (name: string, room: Room): number => {
   return activeCount + requestCount;
 };
 
-export type EnergySource = Source | Resource | StructureContainer | Ruin;
+export type EnergySource = Source | Resource | StructureContainer | Ruin | StructureStorage;
 
 export const findClosestEnergySource = (creep: Creep): EnergySource | undefined => {
   // Find dropped resources
@@ -38,6 +38,15 @@ export const findClosestEnergySource = (creep: Creep): EnergySource | undefined 
   const ruin = creep.pos.findClosestByPath(FIND_RUINS, { filter: r => r.store.getUsedCapacity(RESOURCE_ENERGY) > 0 });
   if (ruin) return ruin;
 
+  // Find storage
+  const storage = creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
+    filter: s => {
+      return (
+        s.structureType === STRUCTURE_STORAGE && s.store.getUsedCapacity(RESOURCE_ENERGY) > creep.store.getCapacity()
+      );
+    }
+  });
+  if (storage) return storage as StructureStorage;
   // Find containers
   const container = creep.pos.findClosestByPath(FIND_STRUCTURES, {
     filter: s => {

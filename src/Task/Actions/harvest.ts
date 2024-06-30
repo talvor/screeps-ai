@@ -1,7 +1,7 @@
 import { findClosestEnergySource } from "Selectors/creeps";
 import { TaskAction, TaskActionType, BaseTaskAction } from "Task/Actions/task-action";
 
-type HarvestTarget = StructureContainer | Resource | Source | Ruin;
+type HarvestTarget = StructureStorage | StructureContainer | Resource | Source | Ruin;
 
 class HarvestAction extends BaseTaskAction<undefined, undefined> {
   type = TaskActionType.HARVEST;
@@ -26,7 +26,9 @@ class HarvestAction extends BaseTaskAction<undefined, undefined> {
     }
 
     let code;
-    if (target instanceof StructureContainer || target instanceof Ruin) {
+    if (target instanceof Structure) {
+      code = this.tryWithdraw(creep, ta.target as Id<StructureContainer>, ta);
+    } else if (target instanceof Ruin) {
       code = this.tryWithdraw(creep, ta.target as Id<StructureContainer>, ta);
     } else if (target instanceof Resource) {
       code = this.tryPickup(creep, ta.target as Id<Resource>);

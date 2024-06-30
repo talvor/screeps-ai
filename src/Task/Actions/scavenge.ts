@@ -1,7 +1,7 @@
 import { findClosestFreeSource } from "Selectors/creeps";
 import { TaskAction, TaskActionType, BaseTaskAction } from "Task/Actions/task-action";
 
-type HarvestTarget = StructureContainer | Resource | Source | Ruin;
+type HarvestTarget = StructureStorage | StructureContainer | Resource | Source | Ruin;
 
 class ScavengeAction extends BaseTaskAction<undefined, undefined> {
   type = TaskActionType.SCAVENGE;

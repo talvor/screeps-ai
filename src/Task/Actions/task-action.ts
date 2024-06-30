@@ -14,7 +14,6 @@ export enum TaskActionType {
   MOVE = "MOVE",
   TRANSFER = "TRANSFER",
   UPGRADE = "UPGRADE",
-  REPAIR = "REPAIR",
   SCAVENGE = "SCAVENGE",
   SUICIDE = "SUICIDE",
   WITHDRAW = "WITHDRAW"
@@ -31,7 +30,6 @@ export const TaskActionEmoji: EmojiRecord = {
   MOVE: "🚶",
   TRANSFER: "🚚",
   UPGRADE: "🔧",
-  REPAIR: "🪛",
   SUICIDE: "☠️",
   WITHDRAW: "⬆️"
 };
